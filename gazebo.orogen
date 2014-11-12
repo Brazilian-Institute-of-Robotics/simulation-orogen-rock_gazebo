@@ -22,7 +22,7 @@ import_types_from "gazeboTypes.hpp"
 #
 # The corresponding C++ class can be edited in tasks/Task.hpp and
 # tasks/Task.cpp, and will be put in the gazebo namespace.
-task_context "Task" do
+task_context "DCMotorTask" do
     # This is the default from now on, and should not be removed. Rock will
     # transition to a setup where all components use a configuration step.
 #    needs_configuration
