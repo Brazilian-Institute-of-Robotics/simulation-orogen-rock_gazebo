@@ -1,53 +1,67 @@
 /* Generated from orogen/lib/orogen/templates/tasks/Task.hpp */
 
-#ifndef GAZEBO_DCMOTORTASK_TASK_HPP
-#define GAZEBO_DCMOTORTASK_TASK_HPP
+#ifndef GAZEBO_MODELTASK_TASK_HPP
+#define GAZEBO_MODELTASK_TASK_HPP
 
-#include "gazebo/DCMotorTaskBase.hpp"
+#include "gazebo/ModelTaskBase.hpp"
+
+#include <gazebo/gazebo.hh>
+#include <gazebo/common/common.hh>
+#include <gazebo/sensors/sensors.hh>
+#include <gazebo/physics/physics.hh>
+
 
 namespace gazebo {
 
-    /*! \class DCMotorTask 
+    /*! \class ModelTask 
      * \brief The task context provides and requires services. It uses an ExecutionEngine to perform its functions.
      * Essential interfaces are operations, data flow ports and properties. These interfaces have been defined using the oroGen specification.
      * In order to modify the interfaces you should (re)use oroGen and rely on the associated workflow.
-     * Declare a new task context (i.e., a component)
-
-The corresponding C++ class can be edited in tasks/Task.hpp and
-tasks/Task.cpp, and will be put in the gazebo namespace.
+     * 
      * \details
      * The name of a TaskContext is primarily defined via:
      \verbatim
      deployment 'deployment_name'
-         task('custom_task_name','gazebo::DCMotorTask')
+         task('custom_task_name','gazebo::ModelTask')
      end
      \endverbatim
      *  It can be dynamically adapted when the deployment is called with a prefix argument. 
      */
-    class DCMotorTask : public DCMotorTaskBase
+    class ModelTask : public ModelTaskBase
     {
-	friend class DCMotorTaskBase;
+	friend class ModelTaskBase;
+	
+	private:
+		physics::JointPtr robot_left_joint;
+		physics::JointPtr robot_right_joint;	
+		physics::ModelPtr model;
+		physics::WorldPtr world;
+		
     protected:
 
 
-
     public:
-        /** TaskContext constructor for DCMotorTask
+    	void setGazeboModel(physics::WorldPtr, physics::ModelPtr);
+    	
+    	void step();
+    
+    
+        /** TaskContext constructor for ModelTask
          * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
          * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
          */
-        DCMotorTask(std::string const& name = "gazebo::DCMotorTask", TaskCore::TaskState initial_state = Stopped);
+        ModelTask(std::string const& name = "gazebo::ModelTask", TaskCore::TaskState initial_state = Stopped);
 
-        /** TaskContext constructor for DCMotorTask 
+        /** TaskContext constructor for ModelTask 
          * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices. 
          * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task. 
          * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
          */
-        DCMotorTask(std::string const& name, RTT::ExecutionEngine* engine, TaskCore::TaskState initial_state = Stopped);
+        ModelTask(std::string const& name, RTT::ExecutionEngine* engine, TaskCore::TaskState initial_state = Stopped);
 
-        /** Default deconstructor of DCMotorTask
+        /** Default deconstructor of ModelTask
          */
-	~DCMotorTask();
+		~ModelTask();
 
         /** This hook is called by Orocos when the state machine transitions
          * from PreOperational to Stopped. If it returns false, then the

@@ -7,15 +7,11 @@ using namespace gazebo;
 DCMotorTask::DCMotorTask(std::string const& name, TaskCore::TaskState initial_state)
     : DCMotorTaskBase(name, initial_state)
 {
-	// Initial torque equals to zero
-	torque = 0;
 }
 
 DCMotorTask::DCMotorTask(std::string const& name, RTT::ExecutionEngine* engine, TaskCore::TaskState initial_state)
     : DCMotorTaskBase(name, engine, initial_state)
 {
-	// Initial torque equals to zero
-	torque = 0;
 }
 
 DCMotorTask::~DCMotorTask()
@@ -43,9 +39,6 @@ bool DCMotorTask::startHook()
 void DCMotorTask::updateHook()
 {
     DCMotorTaskBase::updateHook();
-    
-    // Update the torque value that gazebo plugin will read to simulate
-    _dc_motor_torque.read(torque);    
 }
 void DCMotorTask::errorHook()
 {
