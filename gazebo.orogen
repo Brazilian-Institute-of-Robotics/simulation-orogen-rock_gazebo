@@ -4,7 +4,11 @@ name "gazebo"
 
 # If new data types need to be defined, they have to be put in a separate C++
 # header, and this header will be loaded here
+
 import_types_from "gazeboTypes.hpp"
+
+using_library "gazebo"
+
 
 # Finally, it is pretty common that headers are directly loaded from an external
 # library. In this case, the library must be first used (the name is the
@@ -55,10 +59,6 @@ import_types_from "gazeboTypes.hpp"
 #    periodic 0.1
 #end
 
-
-
 task_context "ModelTask" do
-	input_port "joint_effort","double"
-	periodic 0.1
 end
 

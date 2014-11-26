@@ -3,15 +3,45 @@
 #ifndef GAZEBO_MODELTASK_TASK_HPP
 #define GAZEBO_MODELTASK_TASK_HPP
 
-#include "gazebo/ModelTaskBase.hpp"
-
-#include <gazebo/gazebo.hh>
-#include <gazebo/common/common.hh>
-#include <gazebo/sensors/sensors.hh>
+#include "gazebo/ModelTaskBase.hpp"	
 #include <gazebo/physics/physics.hh>
-
+#include <rtt/Activity.hpp>
 
 namespace gazebo {
+
+//	class ModelActivity : public RTT::Activity
+//	{
+//		public:
+//			ModelActivity(RTT::base::RunnableInterface* r = 0, const std::string& name ="Activity") 
+//				: RTT::Activity(r,"Activity") {}
+////			
+////			ModelActivity(int priority,
+////				RTT::base::RunnableInterface* r = 0, const std::string& name ="Activity") 
+////				: Activity(priority,r,"Activity") {}
+////			
+////			ModelActivity(int priority, RTT::Seconds period, 
+////				RTT::base::RunnableInterface* r = 0, const std::string& name ="Activity") 
+////				: RTT::Activity(priority, period,r,"Activity") {}
+////			
+////			ModelActivity(int scheduler, int priority,
+////  			RTT::base::RunnableInterface* r = 0, const std::string& name ="Activity")
+////				: RTT::Activity(scheduler,priority, r,"Activity") {}
+//			
+//			ModelActivity(int scheduler, int priority, RTT::Seconds period,
+//                RTT::base::RunnableInterface* r = 0, const std::string& name ="Activity")
+//				: RTT::Activity(scheduler, priority, period, r,"Activity") {}		
+
+////			ModelActivity(int scheduler, int priority, RTT::Seconds period, unsigned cpu_affinity,
+////              RTT::base::RunnableInterface* r = 0, const std::string& name ="Activity")			
+////				: RTT::Activity(scheduler, priority, period, cpu_affinity, r,"Activity") {}	
+//			
+//			virtual ~ModelActivity(); 
+//						
+//			virtual void step();
+//	};
+
+
+
 
     /*! \class ModelTask 
      * \brief The task context provides and requires services. It uses an ExecutionEngine to perform its functions.
@@ -30,22 +60,29 @@ namespace gazebo {
     class ModelTask : public ModelTaskBase
     {
 	friend class ModelTaskBase;
-	
 	private:
-		physics::JointPtr robot_left_joint;
-		physics::JointPtr robot_right_joint;	
 		physics::ModelPtr model;
 		physics::WorldPtr world;
 		
+		RTT::InputPort<double>* _axial_joint_port;
+		
+		typedef gazebo::physics::Joint_V Joint_V;
+		Joint_V joints;
+		
+		typedef std::vector<std::pair<RTT::InputPort<double>*,gazebo::physics::JointPtr> > JointPort_V;
+		JointPort_V _joint_port_list;
+					
     protected:
-
-
+		
     public:
-    	void setGazeboModel(physics::WorldPtr, physics::ModelPtr);
-    	
-    	void step();
-    
-    
+
+		
+		void setGazeboModel(physics::WorldPtr, physics::ModelPtr);	
+		
+		void updateModel();
+   
+   
+   
         /** TaskContext constructor for ModelTask
          * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
          * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
