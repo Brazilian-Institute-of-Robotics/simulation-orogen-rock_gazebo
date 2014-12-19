@@ -1,162 +1,83 @@
 /* Generated from orogen/lib/orogen/templates/tasks/Task.hpp */
-
+//======================================================================================
+// Brazilian Institute of Robotics 
+// Authors: Thomio Watanabe
+// Date: December 2014
+//====================================================================================== 
 #ifndef GAZEBO_MODELTASK_TASK_HPP
 #define GAZEBO_MODELTASK_TASK_HPP
 
 #include "gazebo/ModelTaskBase.hpp"	
 #include <gazebo/physics/physics.hh>
-#include <rtt/Activity.hpp>
+#include <rtt/extras/SlaveActivity.hpp>
+
+#include <rtt/internal/Signal.hpp>
+#include <rtt/Handle.hpp>
+
+#define UNDERWATER 1
 
 namespace gazebo {
 
-//	class ModelActivity : public RTT::Activity
+//	class ModelActivity : public RTT::extras::SlaveActivity
 //	{
 //		public:
-//			ModelActivity(RTT::base::RunnableInterface* r = 0, const std::string& name ="Activity") 
-//				: RTT::Activity(r,"Activity") {}
-////			
-////			ModelActivity(int priority,
-////				RTT::base::RunnableInterface* r = 0, const std::string& name ="Activity") 
-////				: Activity(priority,r,"Activity") {}
-////			
-////			ModelActivity(int priority, RTT::Seconds period, 
-////				RTT::base::RunnableInterface* r = 0, const std::string& name ="Activity") 
-////				: RTT::Activity(priority, period,r,"Activity") {}
-////			
-////			ModelActivity(int scheduler, int priority,
-////  			RTT::base::RunnableInterface* r = 0, const std::string& name ="Activity")
-////				: RTT::Activity(scheduler,priority, r,"Activity") {}
-//			
-//			ModelActivity(int scheduler, int priority, RTT::Seconds period,
-//                RTT::base::RunnableInterface* r = 0, const std::string& name ="Activity")
-//				: RTT::Activity(scheduler, priority, period, r,"Activity") {}		
-
-////			ModelActivity(int scheduler, int priority, RTT::Seconds period, unsigned cpu_affinity,
-////              RTT::base::RunnableInterface* r = 0, const std::string& name ="Activity")			
-////				: RTT::Activity(scheduler, priority, period, cpu_affinity, r,"Activity") {}	
-//			
+//			ModelActivity(RTT::base::RunnableInterface *run=0){}; 
 //			virtual ~ModelActivity(); 
-//						
-//			virtual void step();
+////			virtual bool execute();
+////			virtual void step();
+
+////			RTT::internal::Signal<void(void)> update_signal;
+////			RTT::Handle update_handle;
 //	};
 
-
-
-
-    /*! \class ModelTask 
-     * \brief The task context provides and requires services. It uses an ExecutionEngine to perform its functions.
-     * Essential interfaces are operations, data flow ports and properties. These interfaces have been defined using the oroGen specification.
-     * In order to modify the interfaces you should (re)use oroGen and rely on the associated workflow.
-     * 
-     * \details
-     * The name of a TaskContext is primarily defined via:
-     \verbatim
-     deployment 'deployment_name'
-         task('custom_task_name','gazebo::ModelTask')
-     end
-     \endverbatim
-     *  It can be dynamically adapted when the deployment is called with a prefix argument. 
-     */
     class ModelTask : public ModelTaskBase
     {
-	friend class ModelTaskBase;
-	private:
-		physics::ModelPtr model;
-		physics::WorldPtr world;
+		friend class ModelTaskBase;
+		private:
+			// environment == 0  => ground plane
+			// environment == 1  => underwater
+			int environment;
 		
-		RTT::InputPort<double>* _axial_joint_port;
+			physics::ModelPtr model;
+			physics::WorldPtr world;
+			sdf::ElementPtr sdf;
+
+			void setJoints();
+			void updateJoints();
+			
+			void setLinks();
+			void updateLinks();
+			
+			RTT::InputPort<double>* joint_port;
+			typedef std::vector<std::pair<RTT::InputPort<double>*,gazebo::physics::JointPtr> > JointPort_V;
+			JointPort_V joint_port_list;
+			
+			RTT::InputPort<base::Vector3d>* link_port; 
+			typedef std::vector<std::pair<RTT::InputPort<base::Vector3d>*,gazebo::physics::LinkPtr> > LinkPort_V;
+			LinkPort_V link_port_list; 
 		
-		typedef gazebo::physics::Joint_V Joint_V;
-		Joint_V joints;
+		protected:
 		
-		typedef std::vector<std::pair<RTT::InputPort<double>*,gazebo::physics::JointPtr> > JointPort_V;
-		JointPort_V _joint_port_list;
-					
-    protected:
-		
-    public:
+		public:
+			void setGazeboModel(physics::WorldPtr, physics::ModelPtr, int);	
+			void updateModel();
 
-		
-		void setGazeboModel(physics::WorldPtr, physics::ModelPtr);	
-		
-		void updateModel();
-   
-   
-   
-        /** TaskContext constructor for ModelTask
-         * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
-         * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
-         */
-        ModelTask(std::string const& name = "gazebo::ModelTask", TaskCore::TaskState initial_state = Stopped);
+		    /** TaskContext constructor for ModelTask
+		     * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
+		     * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
+		     */
+		    ModelTask(std::string const& name = "gazebo::ModelTask", TaskCore::TaskState initial_state = Stopped);
 
-        /** TaskContext constructor for ModelTask 
-         * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices. 
-         * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task. 
-         * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
-         */
-        ModelTask(std::string const& name, RTT::ExecutionEngine* engine, TaskCore::TaskState initial_state = Stopped);
+		    /** TaskContext constructor for ModelTask 
+		     * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices. 
+		     * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task. 
+		     * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
+		     */
+		    ModelTask(std::string const& name, RTT::ExecutionEngine* engine, TaskCore::TaskState initial_state = Stopped);
 
-        /** Default deconstructor of ModelTask
-         */
-		~ModelTask();
-
-        /** This hook is called by Orocos when the state machine transitions
-         * from PreOperational to Stopped. If it returns false, then the
-         * component will stay in PreOperational. Otherwise, it goes into
-         * Stopped.
-         *
-         * It is meaningful only if the #needs_configuration has been specified
-         * in the task context definition with (for example):
-         \verbatim
-         task_context "TaskName" do
-           needs_configuration
-           ...
-         end
-         \endverbatim
-         */
-        bool configureHook();
-
-        /** This hook is called by Orocos when the state machine transitions
-         * from Stopped to Running. If it returns false, then the component will
-         * stay in Stopped. Otherwise, it goes into Running and updateHook()
-         * will be called.
-         */
-        bool startHook();
-
-        /** This hook is called by Orocos when the component is in the Running
-         * state, at each activity step. Here, the activity gives the "ticks"
-         * when the hook should be called.
-         *
-         * The error(), exception() and fatal() calls, when called in this hook,
-         * allow to get into the associated RunTimeError, Exception and
-         * FatalError states. 
-         *
-         * In the first case, updateHook() is still called, and recover() allows
-         * you to go back into the Running state.  In the second case, the
-         * errorHook() will be called instead of updateHook(). In Exception, the
-         * component is stopped and recover() needs to be called before starting
-         * it again. Finally, FatalError cannot be recovered.
-         */
-        void updateHook();
-
-        /** This hook is called by Orocos when the component is in the
-         * RunTimeError state, at each activity step. See the discussion in
-         * updateHook() about triggering options.
-         *
-         * Call recover() to go back in the Runtime state.
-         */
-        void errorHook();
-
-        /** This hook is called by Orocos when the state machine transitions
-         * from Running to Stopped after stop() has been called.
-         */
-        void stopHook();
-
-        /** This hook is called by Orocos when the state machine transitions
-         * from Stopped to PreOperational, requiring the call to configureHook()
-         * before calling start() again.
-         */
-        void cleanupHook();
+		    /** Default deconstructor of ModelTask
+		     */
+			~ModelTask();
     };
 }
 
