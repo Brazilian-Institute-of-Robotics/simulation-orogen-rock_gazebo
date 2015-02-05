@@ -12,18 +12,6 @@
 
 namespace gazebo {
 
-//	class ModelActivity : public RTT::extras::SlaveActivity
-//	{
-//		public:
-//			ModelActivity(RTT::base::RunnableInterface *run=0){}; 
-//			virtual ~ModelActivity(); 
-////			virtual bool execute();
-////			virtual void step();
-
-////			RTT::internal::Signal<void(void)> update_signal;
-////			RTT::Handle update_handle;
-//	};
-
     class ModelTask : public ModelTaskBase
     {
 		friend class ModelTaskBase;
