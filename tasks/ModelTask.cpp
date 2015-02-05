@@ -35,6 +35,10 @@ gazebo::ModelTask::~ModelTask()
 //======================================================================================
 void gazebo::ModelTask::setGazeboModel(physics::WorldPtr _world,  physics::ModelPtr _model, int _environment)
 {
+    std::string name = "gazebo:" + _world->GetName() + ":" + _model->GetName();
+    provides()->setName(name);
+    _name.set(name);
+
 	world = _world;
 	model = _model;
 	environment = _environment;
@@ -78,8 +82,7 @@ void gazebo::ModelTask::setLinks()
 				"/" + (*link)->GetName() << std::endl;
 		
 		gzmsg << "RockBridge: create link InputPort in Rock." << std::endl;
-		link_port = new RTT::InputPort<base::Vector3d>( "link: " + world->GetName() +
-				"/" + model->GetName() + "/" + (*link)->GetName() );
+		link_port = new RTT::InputPort<base::Vector3d>((*link)->GetName());
 		ports()->addPort(*link_port);
 		link_port_list.push_back( std::make_pair(link_port,*link) );
 			
