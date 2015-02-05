@@ -54,7 +54,7 @@ namespace gazebo {
 		
 		public:
 			void setGazeboModel(physics::WorldPtr, physics::ModelPtr, int);	
-			void updateModel();
+			void updateHook();
 
 		    /** TaskContext constructor for ModelTask
 		     * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.

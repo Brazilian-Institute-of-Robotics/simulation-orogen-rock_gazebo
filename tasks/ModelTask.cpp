@@ -88,17 +88,14 @@ void gazebo::ModelTask::setLinks()
 		link_port = new RTT::InputPort<base::Vector3d>((*link)->GetName());
 		ports()->addPort(*link_port);
 		link_port_list.push_back( std::make_pair(link_port,*link) );
-			
 	}
 	links.clear();
 }
 //======================================================================================
-void gazebo::ModelTask::updateModel()
+void gazebo::ModelTask::updateHook()
 {
-	// gzmsg << " ModelTask::updateModel() from model:"<< model->GetName() << std::endl;
-	
-	updateJoints();
-	updateLinks();
+    updateJoints();
+    updateLinks();
 }
 //======================================================================================
 void gazebo::ModelTask::updateJoints()
