@@ -9,12 +9,6 @@
 
 #include "gazebo/ModelTaskBase.hpp"	
 #include <gazebo/physics/physics.hh>
-#include <rtt/extras/SlaveActivity.hpp>
-
-#include <rtt/internal/Signal.hpp>
-#include <rtt/Handle.hpp>
-
-#define UNDERWATER 1
 
 namespace gazebo {
 

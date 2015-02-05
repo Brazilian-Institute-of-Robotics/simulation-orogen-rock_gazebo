@@ -7,6 +7,9 @@
 // add joints, position and velocity
 //======================================================================================
 #include "ModelTask.hpp"
+
+static const int UNDERWATER = 1;
+
 //======================================================================================
 gazebo::ModelTask::ModelTask(std::string const& name, TaskCore::TaskState initial_state)
 	: ModelTaskBase(name, initial_state),environment(0)
