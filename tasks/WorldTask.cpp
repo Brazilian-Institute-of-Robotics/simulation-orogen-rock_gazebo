@@ -4,13 +4,13 @@
 
 using namespace gazebo;
 
-WorldTask::WorldTask(std::string const& name, TaskCore::TaskState initial_state)
-    : WorldTaskBase(name, initial_state)
+WorldTask::WorldTask(std::string const& name)
+    : WorldTaskBase(name)
 {
 }
 
-WorldTask::WorldTask(std::string const& name, RTT::ExecutionEngine* engine, TaskCore::TaskState initial_state)
-    : WorldTaskBase(name, engine, initial_state)
+WorldTask::WorldTask(std::string const& name, RTT::ExecutionEngine* engine)
+    : WorldTaskBase(name, engine)
 {
 }
 

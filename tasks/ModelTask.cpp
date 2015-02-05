@@ -11,13 +11,13 @@
 static const int UNDERWATER = 1;
 
 //======================================================================================
-gazebo::ModelTask::ModelTask(std::string const& name, TaskCore::TaskState initial_state)
-	: ModelTaskBase(name, initial_state),environment(0)
+gazebo::ModelTask::ModelTask(std::string const& name)
+	: ModelTaskBase(name),environment(0)
 {
 }
 //======================================================================================
-gazebo::ModelTask::ModelTask(std::string const& name, RTT::ExecutionEngine* engine, TaskCore::TaskState initial_state)
-	: ModelTaskBase(name, engine, initial_state),environment(0)
+gazebo::ModelTask::ModelTask(std::string const& name, RTT::ExecutionEngine* engine)
+	: ModelTaskBase(name, engine),environment(0)
 {
 }
 //======================================================================================

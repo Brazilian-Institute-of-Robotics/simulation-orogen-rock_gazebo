@@ -61,11 +61,13 @@ using_library "gazebo"
 #end
 
 task_context "WorldTask" do
+    needs_configuration
     attribute "name", '/std/string'
     output_port 'time', 'base/Time'
 end
 
 task_context "ModelTask" do
+    needs_configuration
     attribute "name", '/std/string'
 end
 
