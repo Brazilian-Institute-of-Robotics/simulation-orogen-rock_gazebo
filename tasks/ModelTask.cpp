@@ -7,14 +7,17 @@
 // add joints, position and velocity
 //======================================================================================
 #include "ModelTask.hpp"
+
+static const int UNDERWATER = 1;
+
 //======================================================================================
-gazebo::ModelTask::ModelTask(std::string const& name, TaskCore::TaskState initial_state)
-	: ModelTaskBase(name, initial_state),environment(0)
+gazebo::ModelTask::ModelTask(std::string const& name)
+	: ModelTaskBase(name),environment(0)
 {
 }
 //======================================================================================
-gazebo::ModelTask::ModelTask(std::string const& name, RTT::ExecutionEngine* engine, TaskCore::TaskState initial_state)
-	: ModelTaskBase(name, engine, initial_state),environment(0)
+gazebo::ModelTask::ModelTask(std::string const& name, RTT::ExecutionEngine* engine)
+	: ModelTaskBase(name, engine),environment(0)
 {
 }
 //======================================================================================
@@ -35,6 +38,10 @@ gazebo::ModelTask::~ModelTask()
 //======================================================================================
 void gazebo::ModelTask::setGazeboModel(physics::WorldPtr _world,  physics::ModelPtr _model, int _environment)
 {
+    std::string name = "gazebo:" + _world->GetName() + ":" + _model->GetName();
+    provides()->setName(name);
+    _name.set(name);
+
 	world = _world;
 	model = _model;
 	environment = _environment;
@@ -78,21 +85,17 @@ void gazebo::ModelTask::setLinks()
 				"/" + (*link)->GetName() << std::endl;
 		
 		gzmsg << "RockBridge: create link InputPort in Rock." << std::endl;
-		link_port = new RTT::InputPort<base::Vector3d>( "link: " + world->GetName() +
-				"/" + model->GetName() + "/" + (*link)->GetName() );
+		link_port = new RTT::InputPort<base::Vector3d>((*link)->GetName());
 		ports()->addPort(*link_port);
 		link_port_list.push_back( std::make_pair(link_port,*link) );
-			
 	}
 	links.clear();
 }
 //======================================================================================
-void gazebo::ModelTask::updateModel()
+void gazebo::ModelTask::updateHook()
 {
-	// gzmsg << " ModelTask::updateModel() from model:"<< model->GetName() << std::endl;
-	
-	updateJoints();
-	updateLinks();
+    updateJoints();
+    updateLinks();
 }
 //======================================================================================
 void gazebo::ModelTask::updateJoints()

@@ -6,6 +6,7 @@ name "gazebo"
 # header, and this header will be loaded here
 
 import_types_from "gazeboTypes.hpp"
+import_types_from "base"
 
 using_library "gazebo"
 
@@ -59,6 +60,14 @@ using_library "gazebo"
 #    periodic 0.1
 #end
 
+task_context "WorldTask" do
+    needs_configuration
+    attribute "name", '/std/string'
+    output_port 'time', 'base/Time'
+end
+
 task_context "ModelTask" do
+    needs_configuration
+    attribute "name", '/std/string'
 end
 

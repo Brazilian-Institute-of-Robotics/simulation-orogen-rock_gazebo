@@ -9,26 +9,8 @@
 
 #include "gazebo/ModelTaskBase.hpp"	
 #include <gazebo/physics/physics.hh>
-#include <rtt/extras/SlaveActivity.hpp>
-
-#include <rtt/internal/Signal.hpp>
-#include <rtt/Handle.hpp>
-
-#define UNDERWATER 1
 
 namespace gazebo {
-
-//	class ModelActivity : public RTT::extras::SlaveActivity
-//	{
-//		public:
-//			ModelActivity(RTT::base::RunnableInterface *run=0){}; 
-//			virtual ~ModelActivity(); 
-////			virtual bool execute();
-////			virtual void step();
-
-////			RTT::internal::Signal<void(void)> update_signal;
-////			RTT::Handle update_handle;
-//	};
 
     class ModelTask : public ModelTaskBase
     {
@@ -60,20 +42,20 @@ namespace gazebo {
 		
 		public:
 			void setGazeboModel(physics::WorldPtr, physics::ModelPtr, int);	
-			void updateModel();
+			void updateHook();
 
 		    /** TaskContext constructor for ModelTask
 		     * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
 		     * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
 		     */
-		    ModelTask(std::string const& name = "gazebo::ModelTask", TaskCore::TaskState initial_state = Stopped);
+		    ModelTask(std::string const& name = "gazebo::ModelTask");
 
 		    /** TaskContext constructor for ModelTask 
 		     * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices. 
 		     * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task. 
 		     * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
 		     */
-		    ModelTask(std::string const& name, RTT::ExecutionEngine* engine, TaskCore::TaskState initial_state = Stopped);
+		    ModelTask(std::string const& name, RTT::ExecutionEngine* engine);
 
 		    /** Default deconstructor of ModelTask
 		     */
