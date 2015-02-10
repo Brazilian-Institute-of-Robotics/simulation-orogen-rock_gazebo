@@ -16,10 +16,6 @@ namespace gazebo {
     {
 		friend class ModelTaskBase;
 		private:
-			// environment == 0  => ground plane
-			// environment == 1  => underwater
-			int environment;
-		
 			physics::ModelPtr model;
 			physics::WorldPtr world;
 			sdf::ElementPtr sdf;
@@ -41,7 +37,7 @@ namespace gazebo {
 		protected:
 		
 		public:
-			void setGazeboModel(physics::WorldPtr, physics::ModelPtr, int);	
+			void setGazeboModel(physics::WorldPtr, physics::ModelPtr);	
 			void updateHook();
 
 		    /** TaskContext constructor for ModelTask
