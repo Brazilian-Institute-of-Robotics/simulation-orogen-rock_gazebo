@@ -19,21 +19,6 @@ gazebo::ModelTask::ModelTask(std::string const& name, RTT::ExecutionEngine* engi
 {
 }
 //======================================================================================
-gazebo::ModelTask::~ModelTask()
-{
-	delete joint_port;
-	delete link_port;
-	
-	for(JointPort_V::iterator it = joint_port_list.begin();it != joint_port_list.end(); ++it)
-		delete (it)->first;
-
-	for(LinkPort_V::iterator it = link_port_list.begin(); it != link_port_list.end(); ++it)
-		delete it->first; 
-
-	joint_port_list.clear();
-	link_port_list.clear();
-}
-//======================================================================================
 void gazebo::ModelTask::setGazeboModel(physics::WorldPtr _world,  physics::ModelPtr _model)
 {
     std::string name = "gazebo:" + _world->GetName() + ":" + _model->GetName();
@@ -45,44 +30,39 @@ void gazebo::ModelTask::setGazeboModel(physics::WorldPtr _world,  physics::Model
 //	sdf = model->GetSDF();
 	
 //	Export Gazebo Joints and Links to Rock-Robotics
-	setJoints();
-	setLinks();
+	setJointPorts();
+	setLinkPorts();
 } 
 //======================================================================================
-void gazebo::ModelTask::setJoints()
+void gazebo::ModelTask::setJointPorts()
 {
+    // base::samples::Joints rock_joint; 
 	// Get all joints from a model and creates a Rock component InputPort
-	typedef gazebo::physics::Joint_V Joint_V;
-	Joint_V joints = model->GetJoints();
+	joints = model->GetJoints();
 	for(Joint_V::iterator joint = joints.begin(); joint != joints.end(); ++joint)
 	{
-		gzmsg <<"RockBridge: found joint: "<< world->GetName() + "/" + model->GetName() + 
+		gzmsg << "RockBridge: found joint: " << world->GetName() + "/" + model->GetName() + 
 				"/" + (*joint)->GetName() << std::endl;
 		gzmsg << "RockBridge: create joint InputPort in Rock." << std::endl;
-		joint_port = new RTT::InputPort<double>( "joint: " + world->GetName() +
-				"/" + model->GetName() + "/" + (*joint)->GetName() );
+		joint_port = new RTT::InputPort<double>( "_joint_" + (*joint)->GetName() + "_in");
 		ports()->addPort( *joint_port );
 		joint_port_list.push_back( std::make_pair(joint_port,*joint) );			
 	}
-	joints.clear();
 }
 //======================================================================================
-void gazebo::ModelTask::setLinks()
+void gazebo::ModelTask::setLinkPorts()
 {
     // Get all links from a model and creates a Rock component InputPort
-	typedef gazebo::physics::Link_V Link_V;
-	Link_V links = model->GetLinks();
+	links = model->GetLinks();
 	for(Link_V::iterator link = links.begin(); link != links.end(); ++link)
 	{
-		gzmsg << "RockBridge: found link: "<< world->GetName() + "/" + model->GetName() + 
+		gzmsg << "RockBridge: found link: " << world->GetName() + "/" + model->GetName() + 
 				"/" + (*link)->GetName() << std::endl;
-		
 		gzmsg << "RockBridge: create link InputPort in Rock." << std::endl;
-		link_port = new RTT::InputPort<base::Vector3d>((*link)->GetName());
-		ports()->addPort(*link_port);
+		link_port = new RTT::InputPort<base::Vector3d>( "_link_" + (*link)->GetName() + "_in");
+		ports()->addPort( *link_port );
 		link_port_list.push_back( std::make_pair(link_port,*link) );
 	}
-	links.clear();
 }
 //======================================================================================
 void gazebo::ModelTask::updateHook()
@@ -100,12 +80,15 @@ void gazebo::ModelTask::updateJoints()
 		if(effort != RTT::NoData)
 		{
 			// Define the limits for the joint effort
-			if((-1.0 <= effort) && (effort <= 1.0)) 
-			{
-				(*it).second->SetForce(0,effort);
-			} else
-			{
-				gzmsg << "RockBridge: error - effort value out of range (-1 <= effort <= 1)." << std::endl;
+			try{
+			    if((-1.0 <= effort) && (effort <= 1.0)){
+			        (*it).second->SetForce(0,effort);
+			    }else{
+			        throw;
+			    }
+			}catch(...){
+			    // Joint effort value out of range 
+			    gzmsg << "RockBridge: error - effort value out of range (-1 <= effort <= 1)." << std::endl;
 			}
 		}
 	}
@@ -125,5 +108,20 @@ void gazebo::ModelTask::updateLinks()
 			link->AddRelativeForce( gazebo::math::Vector3(force(0),force(1),force(2)) );
 		}
 	}
+}
+//======================================================================================
+gazebo::ModelTask::~ModelTask()
+{
+	delete joint_port;
+	delete link_port;
+	
+	for(JointPort_V::iterator it = joint_port_list.begin();it != joint_port_list.end(); ++it)
+		delete (it)->first;
+
+	for(LinkPort_V::iterator it = link_port_list.begin(); it != link_port_list.end(); ++it)
+		delete it->first; 
+
+	joint_port_list.clear();
+	link_port_list.clear();
 }
 //======================================================================================
