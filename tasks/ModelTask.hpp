@@ -4,22 +4,27 @@
 // Authors: Thomio Watanabe
 // Date: December 2014
 //====================================================================================== 
-#ifndef GAZEBO_MODELTASK_TASK_HPP
-#define GAZEBO_MODELTASK_TASK_HPP
+#ifndef ROCK_GAZEBO_MODELTASK_TASK_HPP
+#define ROCK_GAZEBO_MODELTASK_TASK_HPP
 
-#include "gazebo/ModelTaskBase.hpp"	
+#include "rock_gazebo/ModelTaskBase.hpp"	
 #include <gazebo/physics/physics.hh>
 
-typedef gazebo::physics::Joint_V Joint_V;
-typedef gazebo::physics::Link_V Link_V;
-	        
-namespace gazebo {
+namespace rock_gazebo {
     class ModelTask : public ModelTaskBase
     {
+        public:
+            typedef gazebo::physics::Joint_V Joint_V;
+            typedef gazebo::physics::Link_V Link_V;
+            typedef gazebo::physics::ModelPtr ModelPtr;
+            typedef gazebo::physics::WorldPtr WorldPtr;
+            typedef gazebo::physics::JointPtr JointPtr;
+            typedef gazebo::physics::LinkPtr LinkPtr;
+	        
 		friend class ModelTaskBase;
 		private:
-			physics::ModelPtr model;
-			physics::WorldPtr world;
+			ModelPtr model;
+			WorldPtr world;
 			sdf::ElementPtr sdf;
 
 			void setJointPorts();
@@ -29,11 +34,11 @@ namespace gazebo {
 			void updateLinks();
 			
 			RTT::InputPort<double>* joint_port;
-			typedef std::vector<std::pair<RTT::InputPort<double>*,gazebo::physics::JointPtr> > JointPort_V;
+			typedef std::vector<std::pair<RTT::InputPort<double>*,JointPtr> > JointPort_V;
 			JointPort_V joint_port_list;
 			
 			RTT::InputPort<base::Vector3d>* link_port; 
-			typedef std::vector<std::pair<RTT::InputPort<base::Vector3d>*,gazebo::physics::LinkPtr> > LinkPort_V;
+			typedef std::vector<std::pair<RTT::InputPort<base::Vector3d>*,LinkPtr> > LinkPort_V;
 			LinkPort_V link_port_list; 
 	        
 	        Joint_V joints;
@@ -42,7 +47,7 @@ namespace gazebo {
 		protected:
 		
 		public:
-			void setGazeboModel(physics::WorldPtr, physics::ModelPtr);	
+			void setGazeboModel(WorldPtr, ModelPtr);	
 			void updateHook();
 
 		    /** TaskContext constructor for ModelTask

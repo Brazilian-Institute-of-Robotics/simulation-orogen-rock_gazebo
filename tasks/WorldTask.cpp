@@ -2,6 +2,7 @@
 
 #include "WorldTask.hpp"
 
+using namespace rock_gazebo;
 using namespace gazebo;
 
 WorldTask::WorldTask(std::string const& name)

@@ -1,13 +1,12 @@
 <package>
-  <description brief="">
-  
+  <description brief="Rock components needed for the rock-gazebo bridge">
+  This oroGen project defines components that are needed for the rock-gazebo bridge. They are not meant to be used standalone: the simulation/rock_gazebo package uses them to expose gazebo simulations to a Rock system
   </description>
-  <author>/</author>
+  <author>Thomio Watanabe/thomio.watanabe@fieb.org.br</author>
   <license></license>
   <url>http://</url>
   <logo>http://</logo>
   <depend package="base/cmake" />
-  <depend package="simulation/gazebo" />
   <!--
    To add any dependencies use the depend tag
   <depend package="dummy-dependency-0" />
@@ -15,4 +14,6 @@
   <depend package="dummy-dependency-n-1" />
   <depend package="dummy-dependency-n" />
   -->
+  <depend package="base/orogen/types" />
+  <depend package="simulation/gazebo" />
 </package>

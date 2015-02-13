@@ -1,0 +1,25 @@
+name "rock_gazebo"
+import_types_from "base"
+
+using_library "gazebo"
+
+
+# Representation of a gazebo World object
+task_context "WorldTask" do
+    needs_configuration
+
+    # The world full name
+    attribute "name", '/std/string'
+
+    # The simulation time
+    output_port 'time', 'base/Time'
+end
+
+# Representation of a gazebo Model object
+task_context "ModelTask" do
+    needs_configuration
+
+    # The model full name
+    attribute "name", '/std/string'
+end
+
