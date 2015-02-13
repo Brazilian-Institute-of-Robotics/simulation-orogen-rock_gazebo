@@ -10,24 +10,22 @@
 #include "gazebo/ModelTaskBase.hpp"	
 #include <gazebo/physics/physics.hh>
 
+typedef gazebo::physics::Joint_V Joint_V;
+typedef gazebo::physics::Link_V Link_V;
+	        
 namespace gazebo {
-
     class ModelTask : public ModelTaskBase
     {
 		friend class ModelTaskBase;
 		private:
-			// environment == 0  => ground plane
-			// environment == 1  => underwater
-			int environment;
-		
 			physics::ModelPtr model;
 			physics::WorldPtr world;
 			sdf::ElementPtr sdf;
 
-			void setJoints();
+			void setJointPorts();
 			void updateJoints();
 			
-			void setLinks();
+			void setLinkPorts();
 			void updateLinks();
 			
 			RTT::InputPort<double>* joint_port;
@@ -37,11 +35,14 @@ namespace gazebo {
 			RTT::InputPort<base::Vector3d>* link_port; 
 			typedef std::vector<std::pair<RTT::InputPort<base::Vector3d>*,gazebo::physics::LinkPtr> > LinkPort_V;
 			LinkPort_V link_port_list; 
-		
+	        
+	        Joint_V joints;
+	        Link_V links;
+	        
 		protected:
 		
 		public:
-			void setGazeboModel(physics::WorldPtr, physics::ModelPtr, int);	
+			void setGazeboModel(physics::WorldPtr, physics::ModelPtr);	
 			void updateHook();
 
 		    /** TaskContext constructor for ModelTask
