@@ -8,18 +8,21 @@
 //======================================================================================
 #include "ModelTask.hpp"
 
+using namespace gazebo;
+using namespace rock_gazebo;
+
 //======================================================================================
-gazebo::ModelTask::ModelTask(std::string const& name)
+ModelTask::ModelTask(std::string const& name)
 	: ModelTaskBase(name)
 {
 }
 //======================================================================================
-gazebo::ModelTask::ModelTask(std::string const& name, RTT::ExecutionEngine* engine)
+ModelTask::ModelTask(std::string const& name, RTT::ExecutionEngine* engine)
 	: ModelTaskBase(name, engine)
 {
 }
 //======================================================================================
-void gazebo::ModelTask::setGazeboModel(physics::WorldPtr _world,  physics::ModelPtr _model)
+void ModelTask::setGazeboModel(WorldPtr _world,  ModelPtr _model)
 {
     std::string name = "gazebo:" + _world->GetName() + ":" + _model->GetName();
     provides()->setName(name);
@@ -34,7 +37,7 @@ void gazebo::ModelTask::setGazeboModel(physics::WorldPtr _world,  physics::Model
 	setLinkPorts();
 } 
 //======================================================================================
-void gazebo::ModelTask::setJointPorts()
+void ModelTask::setJointPorts()
 {
     // base::samples::Joints rock_joint; 
 	// Get all joints from a model and creates a Rock component InputPort
@@ -50,7 +53,7 @@ void gazebo::ModelTask::setJointPorts()
 	}
 }
 //======================================================================================
-void gazebo::ModelTask::setLinkPorts()
+void ModelTask::setLinkPorts()
 {
     // Get all links from a model and creates a Rock component InputPort
 	links = model->GetLinks();
@@ -65,13 +68,13 @@ void gazebo::ModelTask::setLinkPorts()
 	}
 }
 //======================================================================================
-void gazebo::ModelTask::updateHook()
+void ModelTask::updateHook()
 {
     updateJoints();
     updateLinks();
 }
 //======================================================================================
-void gazebo::ModelTask::updateJoints()
+void ModelTask::updateJoints()
 {
 	for(JointPort_V::iterator it = joint_port_list.begin();it != joint_port_list.end(); ++it)
 	{
@@ -94,23 +97,23 @@ void gazebo::ModelTask::updateJoints()
 	}
 }
 //======================================================================================
-void gazebo::ModelTask::updateLinks()
+void ModelTask::updateLinks()
 {
 	// Update all links from gazebo model
 	for(LinkPort_V::iterator it = link_port_list.begin(); it != link_port_list.end(); ++it)
 	{
-		physics::LinkPtr link = (*it).second;
+		LinkPtr link = (*it).second;
 
 		// Read rock input port and apply a force to gazebo links
 		base::Vector3d force(0.0, 0.0, 0.0);
 		(*it).first->readNewest(force);				
 		if((force(0) != RTT::NoData)||(force(1) != RTT::NoData)||(force(2) != RTT::NoData)){
-			link->AddRelativeForce( gazebo::math::Vector3(force(0),force(1),force(2)) );
+			link->AddRelativeForce( math::Vector3(force(0),force(1),force(2)) );
 		}
 	}
 }
 //======================================================================================
-gazebo::ModelTask::~ModelTask()
+ModelTask::~ModelTask()
 {
 	delete joint_port;
 	delete link_port;

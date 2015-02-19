@@ -1,12 +1,12 @@
 /* Generated from orogen/lib/orogen/templates/tasks/Task.hpp */
 
-#ifndef GAZEBO_WORLDTASK_TASK_HPP
-#define GAZEBO_WORLDTASK_TASK_HPP
+#ifndef ROCK_GAZEBO_WORLDTASK_TASK_HPP
+#define ROCK_GAZEBO_WORLDTASK_TASK_HPP
 
-#include "gazebo/WorldTaskBase.hpp"
+#include "rock_gazebo/WorldTaskBase.hpp"
 #include <gazebo/physics/physics.hh>
 
-namespace gazebo {
+namespace rock_gazebo {
 
     /*! \class WorldTask 
      * \brief The task context provides and requires services. It uses an ExecutionEngine to perform its functions.
@@ -24,12 +24,15 @@ namespace gazebo {
      */
     class WorldTask : public WorldTaskBase
     {
-	friend class WorldTaskBase;
+    public:
+        typedef gazebo::physics::WorldPtr WorldPtr;
 
-        physics::WorldPtr world;
+    private:
+	friend class WorldTaskBase;
+        WorldPtr world;
 
     public:
-        void setGazeboWorld(physics::WorldPtr world);
+        void setGazeboWorld(WorldPtr world);
 
         /** TaskContext constructor for WorldTask
          * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
