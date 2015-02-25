@@ -46,10 +46,16 @@ void ModelTask::setJointPorts()
 	{
 		gzmsg << "RockBridge: found joint: " << world->GetName() + "/" + model->GetName() + 
 				"/" + (*joint)->GetName() << std::endl;
+
 		gzmsg << "RockBridge: create joint InputPort in Rock." << std::endl;
-		joint_port = new RTT::InputPort<double>( "_joint_" + (*joint)->GetName() + "_in");
-		ports()->addPort( *joint_port );
-		joint_port_list.push_back( std::make_pair(joint_port,*joint) );			
+		joint_in_port = new RTT::InputPort<double>( "_joint_" + (*joint)->GetName() + "_in");
+		ports()->addPort( *joint_in_port );
+		joint_in_port_list.push_back( std::make_pair(joint_in_port,*joint) );
+
+		gzmsg << "RockBridge: create joint OutputPort in Rock." << std::endl;
+		joint_out_port = new RTT::OutputPort<double>( "_joint_" + (*joint)->GetName() + "_out");
+		ports()->addPort( *joint_out_port);
+		joint_out_port_list.push_back( std::make_pair(joint_out_port,*joint)  );
 	}
 }
 //======================================================================================
@@ -76,7 +82,7 @@ void ModelTask::updateHook()
 //======================================================================================
 void ModelTask::updateJoints()
 {
-	for(JointPort_V::iterator it = joint_port_list.begin();it != joint_port_list.end(); ++it)
+	for(JointInPort_V::iterator it = joint_in_port_list.begin();it != joint_in_port_list.end(); ++it)
 	{
 		double effort = 0;	
 		(*it).first->readNewest(effort);
@@ -106,25 +112,31 @@ void ModelTask::updateLinks()
 
 		// Read rock input port and apply a force to gazebo links
 		base::Vector3d force(0.0, 0.0, 0.0);
-		(*it).first->readNewest(force);				
+		(*it).first->readNewest(force);
 		if((force(0) != RTT::NoData)||(force(1) != RTT::NoData)||(force(2) != RTT::NoData)){
+            // gzmsg << "RockBridge: applying force to link: " << force << std::endl;
 			link->AddRelativeForce( math::Vector3(force(0),force(1),force(2)) );
-		}
+	    }
 	}
 }
 //======================================================================================
 ModelTask::~ModelTask()
 {
-	delete joint_port;
+	delete joint_in_port;
+	delete joint_out_port;
 	delete link_port;
 	
-	for(JointPort_V::iterator it = joint_port_list.begin();it != joint_port_list.end(); ++it)
+	for(JointInPort_V::iterator it = joint_in_port_list.begin();it != joint_in_port_list.end(); ++it)
 		delete (it)->first;
+
+    for(JointOutPort_V::iterator it = joint_out_port_list.begin();it != joint_out_port_list.end(); ++it)
+        delete (it)->first;
 
 	for(LinkPort_V::iterator it = link_port_list.begin(); it != link_port_list.end(); ++it)
 		delete it->first; 
 
-	joint_port_list.clear();
+	joint_in_port_list.clear();
+	joint_out_port_list.clear();
 	link_port_list.clear();
 }
 //======================================================================================

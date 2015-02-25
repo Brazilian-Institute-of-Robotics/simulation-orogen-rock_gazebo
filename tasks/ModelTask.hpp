@@ -33,9 +33,12 @@ namespace rock_gazebo {
 			void setLinkPorts();
 			void updateLinks();
 			
-			RTT::InputPort<double>* joint_port;
-			typedef std::vector<std::pair<RTT::InputPort<double>*,JointPtr> > JointPort_V;
-			JointPort_V joint_port_list;
+			RTT::InputPort<double>* joint_in_port;
+			RTT::OutputPort<double>* joint_out_port;
+			typedef std::vector<std::pair<RTT::InputPort<double>*,JointPtr> > JointInPort_V;
+			typedef std::vector<std::pair<RTT::OutputPort<double>*,JointPtr> > JointOutPort_V;
+			JointInPort_V joint_in_port_list;
+			JointOutPort_V joint_out_port_list;
 			
 			RTT::InputPort<base::Vector3d>* link_port; 
 			typedef std::vector<std::pair<RTT::InputPort<base::Vector3d>*,LinkPtr> > LinkPort_V;
