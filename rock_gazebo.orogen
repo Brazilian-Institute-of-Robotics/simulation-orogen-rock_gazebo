@@ -21,5 +21,12 @@ task_context "ModelTask" do
 
     # The model full name
     attribute "name", '/std/string'
+
+    property "exported_links", "std/vector<std/string>"
+
+    # Joints input/output ports
+    input_port "joints_cmd", "/base/samples/Joints"
+    output_port "joints_samples", "/base/samples/Joints"
+
 end
 

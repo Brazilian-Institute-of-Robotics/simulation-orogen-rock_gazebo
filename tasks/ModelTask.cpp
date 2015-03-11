@@ -4,24 +4,23 @@
 // Authors: Thomio Watanabe
 // Date: December 2014
 //====================================================================================== 
-// add joints, position and velocity
-//======================================================================================
+
 #include "ModelTask.hpp"
 
 using namespace gazebo;
 using namespace rock_gazebo;
 
-//======================================================================================
+
 ModelTask::ModelTask(std::string const& name)
 	: ModelTaskBase(name)
 {
 }
-//======================================================================================
+
 ModelTask::ModelTask(std::string const& name, RTT::ExecutionEngine* engine)
 	: ModelTaskBase(name, engine)
 {
 }
-//======================================================================================
+
 void ModelTask::setGazeboModel(WorldPtr _world,  ModelPtr _model)
 {
     std::string name = "gazebo:" + _world->GetName() + ":" + _model->GetName();
@@ -30,135 +29,102 @@ void ModelTask::setGazeboModel(WorldPtr _world,  ModelPtr _model)
 
 	world = _world;
 	model = _model;
-//	sdf = model->GetSDF();
 	
-//	Export Gazebo Joints and Links to Rock-Robotics
 	setJointPorts();
-	setLinkPorts();
 } 
-//======================================================================================
+
 void ModelTask::setJointPorts()
 {
-    // base::samples::Joints rock_joint; 
-	// Get all joints from a model and creates a Rock component InputPort
-	joints = model->GetJoints();
-	for(Joint_V::iterator joint = joints.begin(); joint != joints.end(); ++joint)
+	// Get all joints from a model and set Rock Input/Output Ports
+	gazebo_joints = model->GetJoints();
+	for(Joint_V::iterator joint = gazebo_joints.begin(); joint != gazebo_joints.end(); ++joint)
 	{
-		gzmsg << "RockBridge: found joint: " << world->GetName() + "/" + model->GetName() + 
+		gzmsg << "RockBridge: found joint: " << world->GetName() + "/" + model->GetName() +
 				"/" + (*joint)->GetName() << std::endl;
 
-		gzmsg << "RockBridge: create joint InputPort in Rock." << std::endl;
-		joint_in_port = new RTT::InputPort<double>( "_joint_" + (*joint)->GetName() + "_in");
-		ports()->addPort( *joint_in_port );
-		joint_in_port_list.push_back( std::make_pair(joint_in_port,*joint) );
-
-		gzmsg << "RockBridge: create joint OutputPort in Rock." << std::endl;
-		joint_out_port = new RTT::OutputPort<base::Vector3d>( "_joint_" + (*joint)->GetName() + "_out");
-		ports()->addPort( *joint_out_port);
-		joint_out_port_list.push_back( std::make_pair(joint_out_port,*joint)  );
+        joints_in.names.push_back( (*joint)->GetName() );
+        joints_in.elements.push_back( base::JointState::Effort(0.0) );
+        joints_out.names.push_back( (*joint)->GetName() );
+        joints_out.elements.push_back( base::JointState::Position(0.0) );
 	}
 }
-//======================================================================================
+
 void ModelTask::setLinkPorts()
 {
-    // Get all links from a model and creates a Rock component InputPort
-	links = model->GetLinks();
-	for(Link_V::iterator link = links.begin(); link != links.end(); ++link)
+    // Create Rock output ports for the links defined in the configuration file.
+	gazebo_links = model->GetLinks();
+	for(Link_V::iterator link = gazebo_links.begin(); link != gazebo_links.end(); ++link)
 	{
-		gzmsg << "RockBridge: found link: " << world->GetName() + "/" + model->GetName() + 
-				"/" + (*link)->GetName() << std::endl;
+        for(NameVector::iterator it = link_names.begin(); it != link_names.end(); ++it)
+        {
+            if( (*it).compare( (*link)->GetName() ) == 0 )
+            {
+                gzmsg << "RockBridge: found link: " << world->GetName() + "/" + model->GetName() +
+                    "/" + (*link)->GetName() << std::endl;
 
-		gzmsg << "RockBridge: create link InputPort in Rock." << std::endl;
-		link_in_port = new RTT::InputPort<base::Vector3d>( "_link_" + (*link)->GetName() + "_in");
-		ports()->addPort( *link_in_port );
-		link_in_port_list.push_back( std::make_pair(link_in_port,*link) );
-
-		gzmsg << "RockBridge: create link OutputPort in Rock." << std::endl;
-		link_out_port = new RTT::OutputPort<base::Vector3d>("_link_" + (*link)->GetName() + "_out");
-		ports()->addPort( *link_out_port );
-		link_out_port_list.push_back( std::make_pair(link_out_port,*link) );
+                // Create the ports dynamicaly
+                link_out_port = new RBSOutPort( "link_"+ (*link)->GetName() +"_samples" );
+                ports()->addPort(*link_out_port);
+                link_list.push_back( std::make_pair(link_out_port,*link) );
+            }
+        }
 	}
 }
-//======================================================================================
+
 void ModelTask::updateHook()
 {
     updateJoints();
     updateLinks();
 }
-//======================================================================================
+
 void ModelTask::updateJoints()
 {
-    // Apply effort to joint
-	for(JointInPort_V::iterator it = joint_in_port_list.begin(); it != joint_in_port_list.end(); ++it)
-	{
-		double effort = 0;	
-		(*it).first->readNewest(effort);
-		if(effort != RTT::NoData){
-			// Define the limits for the joint effort
-			try{
-			    if((-1.0 <= effort) && (effort <= 1.0)){
-			        (*it).second->SetForce(0,effort);
-			    }else{
-			        throw;
-			    }
-			}catch(...){
-			    // Joint effort value out of range 
-			    gzmsg << "RockBridge: error - effort value out of range (-1 <= effort <= 1)." << std::endl;
-			}
-		}
-	}
-
-    // Read joint angle in each axis (x,y,z)
-    for(JointOutPort_V::iterator it = joint_out_port_list.begin(); it != joint_out_port_list.end(); ++it)
+    _joints_cmd.readNewest( joints_in );
+    for(Joint_V::iterator it = gazebo_joints.begin(); it != gazebo_joints.end(); ++it )
     {
-        (*it).first->write( base::Vector3d((*it).second->GetAngle(0).Radian(),
-                (*it).second->GetAngle(1).Radian(),(*it).second->GetAngle(2).Radian()) );
+        // Apply effort to joint
+        double effort = joints_in.getElementByName( (*it)->GetName() ).effort;
+        if( effort != RTT::NoData )
+            (*it)->SetForce(0,effort);
+
+        // Read joint angle from gazebo link
+        double angle = (*it)->GetAngle(0).Radian();
+        joints_out.getElementByName( (*it)->GetName() ).Position(angle);
     }
+    _joints_samples.write( joints_out );
 }
-//======================================================================================
+
 void ModelTask::updateLinks()
 {
-	// Update all links from gazebo model
-    // Apply effort to link
-	for(LinkInPort_V::iterator it = link_in_port_list.begin(); it != link_in_port_list.end(); ++it)
-	{
-		// Read rock input port and apply a force to gazebo links
-		base::Vector3d force(0.0, 0.0, 0.0);
-		(*it).first->readNewest(force);
-		if((force(0) != RTT::NoData)||(force(1) != RTT::NoData)||(force(2) != RTT::NoData)){
-            // gzmsg << "RockBridge: applying force to link: " << force << std::endl;
-			(*it).second->AddRelativeForce( math::Vector3(force(0),force(1),force(2)) );
-	    }
-	}
-
-    // Read absolute link position in gazebo
-    for(LinkOutPort_V::iterator it = link_out_port_list.begin(); it != link_out_port_list.end(); ++it)
+    base::samples::RigidBodyState rock_rbs;
+    for(LinkOutput::iterator it = link_list.begin(); it != link_list.end(); ++it)
     {
-        // Update link positon in Rock
-	    math::Pose link_pose = (*it).second->GetWorldPose();
-	    (*it).first->write( base::Vector3d(link_pose.pos.x,link_pose.pos.y,link_pose.pos.z) );
+        math::Pose link_pose = (*it).second->GetWorldPose();
+        rock_rbs.position = base::Vector3d(link_pose.pos.x,link_pose.pos.y,link_pose.pos.z);
+        rock_rbs.orientation = base::Quaterniond(
+                link_pose.rot.w,link_pose.rot.x,link_pose.rot.y,link_pose.rot.z );
+        (*it).first->write( rock_rbs );
     }
 }
-//======================================================================================
+
+bool ModelTask::configureHook()
+{
+    if( ! ModelTaskBase::configureHook() )
+        return false;
+
+    // The robot configuration YAML file must define the link that will be exported.
+    // Than, these links will be loaded in link_names;
+    link_names = _exported_links.get();
+    setLinkPorts();
+    return true;
+}
+
 ModelTask::~ModelTask()
 {
-	delete joint_in_port;
-	delete joint_out_port;
-	delete link_in_port;
-	delete link_out_port;
-	
-	for(JointInPort_V::iterator it = joint_in_port_list.begin();it != joint_in_port_list.end(); ++it)
-		delete (it)->first;
-    for(JointOutPort_V::iterator it = joint_out_port_list.begin();it != joint_out_port_list.end(); ++it)
-        delete (it)->first;
-	for(LinkInPort_V::iterator it = link_in_port_list.begin(); it != link_in_port_list.end(); ++it)
-		delete it->first;
-    for(LinkOutPort_V::iterator it = link_out_port_list.begin(); it != link_out_port_list.end(); ++it )
-        delete it->first;
+    for(LinkOutput::iterator it = link_list.begin(); it != link_list.end(); ++it)
+        delete (*it).first;
 
-	joint_in_port_list.clear();
-	joint_out_port_list.clear();
-	link_in_port_list.clear();
-	link_out_port_list.clear();
+    joints_in.clear();
+    joints_out.clear();
+
 }
-//======================================================================================
