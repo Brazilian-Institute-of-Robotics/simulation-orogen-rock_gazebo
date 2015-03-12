@@ -22,36 +22,34 @@ namespace rock_gazebo {
             typedef gazebo::physics::JointPtr JointPtr;
             typedef gazebo::physics::LinkPtr LinkPtr;
 	        
-		friend class ModelTaskBase;
-		private:
-			ModelPtr model;
-			WorldPtr world;
-			sdf::ElementPtr sdf;
-
-			void setJointPorts();
-			void updateJoints();
-			
-			void setLinkPorts();
-			void updateLinks();
+        friend class ModelTaskBase;
+        private:
+            ModelPtr model;
+            WorldPtr world;
+            sdf::ElementPtr sdf;
 
             Joint_V gazebo_joints;
             Link_V gazebo_links;
 
             base::samples::Joints joints_in, joints_out;
+            void setupJoints();
+            void updateJoints();
 
             typedef std::vector<std::string> NameVector;
-            NameVector link_names;
-
-            typedef RTT::OutputPort<base::samples::RigidBodyState> RBSOutPort;
-            RBSOutPort* link_out_port;
+            typedef base::samples::RigidBodyState RigidBodyState;
+            typedef RTT::OutputPort<RigidBodyState> RBSOutPort;
             typedef std::vector< std::pair<RBSOutPort*,LinkPtr> > LinkOutput;
             LinkOutput link_list;
+            void setupLinks(NameVector);
+            void updateLinks();
 
-		protected:
+            RigidBodyState createRBS(LinkPtr);
+
+        protected:
 		
-		public:
-			void setGazeboModel(WorldPtr, ModelPtr);	
-			void updateHook();
+        public:
+            void setGazeboModel(WorldPtr, ModelPtr);
+            void updateHook();
 
             bool configureHook();
 
@@ -59,18 +57,18 @@ namespace rock_gazebo {
 		     * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
 		     * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
 		     */
-		    ModelTask(std::string const& name = "gazebo::ModelTask");
+            ModelTask(std::string const& name = "gazebo::ModelTask");
 
 		    /** TaskContext constructor for ModelTask 
 		     * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices. 
 		     * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task. 
 		     * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
 		     */
-		    ModelTask(std::string const& name, RTT::ExecutionEngine* engine);
+            ModelTask(std::string const& name, RTT::ExecutionEngine* engine);
 
 		    /** Default deconstructor of ModelTask
 		     */
-			~ModelTask();
+            ~ModelTask();
     };
 }
 

@@ -21,35 +21,39 @@ ModelTask::ModelTask(std::string const& name, RTT::ExecutionEngine* engine)
 {
 }
 
+ModelTask::~ModelTask()
+{
+    for(LinkOutput::iterator it = link_list.begin(); it != link_list.end(); ++it)
+        delete (*it).first;
+}
+
 void ModelTask::setGazeboModel(WorldPtr _world,  ModelPtr _model)
 {
     std::string name = "gazebo:" + _world->GetName() + ":" + _model->GetName();
     provides()->setName(name);
     _name.set(name);
 
-	world = _world;
-	model = _model;
-	
-	setJointPorts();
+    world = _world;
+    model = _model;
 } 
 
-void ModelTask::setJointPorts()
+void ModelTask::setupJoints()
 {
-	// Get all joints from a model and set Rock Input/Output Ports
-	gazebo_joints = model->GetJoints();
-	for(Joint_V::iterator joint = gazebo_joints.begin(); joint != gazebo_joints.end(); ++joint)
-	{
-		gzmsg << "RockBridge: found joint: " << world->GetName() + "/" + model->GetName() +
-				"/" + (*joint)->GetName() << std::endl;
+    // Get all joints from a model and set Rock Input/Output Ports
+    gazebo_joints = model->GetJoints();
+    for(Joint_V::iterator joint = gazebo_joints.begin(); joint != gazebo_joints.end(); ++joint)
+    {
+        gzmsg << "RockBridge: found joint: " << world->GetName() + "/" + model->GetName() +
+                "/" + (*joint)->GetName() << std::endl;
 
         joints_in.names.push_back( (*joint)->GetName() );
         joints_in.elements.push_back( base::JointState::Effort(0.0) );
         joints_out.names.push_back( (*joint)->GetName() );
         joints_out.elements.push_back( base::JointState::Position(0.0) );
-	}
+    }
 }
 
-void ModelTask::setLinkPorts()
+void ModelTask::setupLinks(NameVector link_names)
 {
     // Create Rock output ports for the links defined in the configuration file.
 	gazebo_links = model->GetLinks();
@@ -63,7 +67,7 @@ void ModelTask::setLinkPorts()
                     "/" + (*link)->GetName() << std::endl;
 
                 // Create the ports dynamicaly
-                link_out_port = new RBSOutPort( "link_"+ (*link)->GetName() +"_samples" );
+                RBSOutPort* link_out_port = new RBSOutPort( "link_"+ (*link)->GetName() +"_samples" );
                 ports()->addPort(*link_out_port);
                 link_list.push_back( std::make_pair(link_out_port,*link) );
             }
@@ -84,7 +88,7 @@ void ModelTask::updateJoints()
     {
         // Apply effort to joint
         double effort = joints_in.getElementByName( (*it)->GetName() ).effort;
-        if( effort != RTT::NoData )
+        if( ! isnan(effort) )
             (*it)->SetForce(0,effort);
 
         // Read joint angle from gazebo link
@@ -96,13 +100,9 @@ void ModelTask::updateJoints()
 
 void ModelTask::updateLinks()
 {
-    base::samples::RigidBodyState rock_rbs;
     for(LinkOutput::iterator it = link_list.begin(); it != link_list.end(); ++it)
     {
-        math::Pose link_pose = (*it).second->GetWorldPose();
-        rock_rbs.position = base::Vector3d(link_pose.pos.x,link_pose.pos.y,link_pose.pos.z);
-        rock_rbs.orientation = base::Quaterniond(
-                link_pose.rot.w,link_pose.rot.x,link_pose.rot.y,link_pose.rot.z );
+        RigidBodyState rock_rbs = createRBS( (*it).second );
         (*it).first->write( rock_rbs );
     }
 }
@@ -112,19 +112,30 @@ bool ModelTask::configureHook()
     if( ! ModelTaskBase::configureHook() )
         return false;
 
+    // Test if setGazeboModel() has been called -> if a model has been found
+    if( ! model )
+        return false;
+
     // The robot configuration YAML file must define the link that will be exported.
     // Than, these links will be loaded in link_names;
-    link_names = _exported_links.get();
-    setLinkPorts();
+    NameVector link_names = _exported_links.get();
+    setupLinks(link_names);
+    setupJoints();
+
     return true;
 }
 
-ModelTask::~ModelTask()
+base::samples::RigidBodyState ModelTask::createRBS(LinkPtr link)
 {
-    for(LinkOutput::iterator it = link_list.begin(); it != link_list.end(); ++it)
-        delete (*it).first;
+    RigidBodyState rbs;
 
-    joints_in.clear();
-    joints_out.clear();
+    rbs.sourceFrame = std::string( model->GetName() );
+    rbs.targetFrame = std::string( link->GetName() );
 
+    math::Pose link_pose = link->GetWorldPose();
+    rbs.position = base::Vector3d(link_pose.pos.x,link_pose.pos.y,link_pose.pos.z);
+    rbs.orientation = base::Quaterniond(
+        link_pose.rot.w,link_pose.rot.x,link_pose.rot.y,link_pose.rot.z );
+
+    return rbs;
 }
