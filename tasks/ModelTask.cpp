@@ -43,13 +43,11 @@ void ModelTask::setupJoints()
     gazebo_joints = model->GetJoints();
     for(Joint_V::iterator joint = gazebo_joints.begin(); joint != gazebo_joints.end(); ++joint)
     {
-        gzmsg << "RockBridge: found joint: " << world->GetName() + "/" + model->GetName() +
+        gzmsg << "ModelTask: found joint: " << world->GetName() + "/" + model->GetName() +
                 "/" + (*joint)->GetName() << std::endl;
 
         joints_in.names.push_back( (*joint)->GetName() );
         joints_in.elements.push_back( base::JointState::Effort(0.0) );
-        joints_out.names.push_back( (*joint)->GetName() );
-        joints_out.elements.push_back( base::JointState::Position(0.0) );
     }
 }
 
@@ -61,13 +59,13 @@ void ModelTask::setupLinks(NameVector link_names)
 	{
         for(NameVector::iterator it = link_names.begin(); it != link_names.end(); ++it)
         {
-            if( (*it).compare( (*link)->GetName() ) == 0 )
+            if( (*it) == (*link)->GetName()  )
             {
-                gzmsg << "RockBridge: found link: " << world->GetName() + "/" + model->GetName() +
+                gzmsg << "ModelTask: found link: " << world->GetName() + "/" + model->GetName() +
                     "/" + (*link)->GetName() << std::endl;
 
                 // Create the ports dynamicaly
-                RBSOutPort* link_out_port = new RBSOutPort( "link_"+ (*link)->GetName() +"_samples" );
+                RBSOutPort* link_out_port = new RBSOutPort( (*link)->GetName() );
                 ports()->addPort(*link_out_port);
                 link_list.push_back( std::make_pair(link_out_port,*link) );
             }
@@ -84,26 +82,38 @@ void ModelTask::updateHook()
 void ModelTask::updateJoints()
 {
     _joints_cmd.readNewest( joints_in );
+
+    std::vector<std::string> names;
+    std::vector<double> positions;
+
     for(Joint_V::iterator it = gazebo_joints.begin(); it != gazebo_joints.end(); ++it )
     {
         // Apply effort to joint
-        double effort = joints_in.getElementByName( (*it)->GetName() ).effort;
-        if( ! isnan(effort) )
-            (*it)->SetForce(0,effort);
+        if( joints_in.getElementByName( (*it)->GetName() ).hasEffort() )
+            (*it)->SetForce(0, joints_in.getElementByName( (*it)->GetName() ).effort );
 
         // Read joint angle from gazebo link
-        double angle = (*it)->GetAngle(0).Radian();
-        joints_out.getElementByName( (*it)->GetName() ).Position(angle);
+        names.push_back( (*it)->GetName() );
+        positions.push_back( (*it)->GetAngle(0).Radian() );
     }
-    _joints_samples.write( joints_out );
+    _joints_samples.write( base::samples::Joints::Positions(positions,names) );
 }
 
 void ModelTask::updateLinks()
 {
     for(LinkOutput::iterator it = link_list.begin(); it != link_list.end(); ++it)
     {
-        RigidBodyState rock_rbs = createRBS( (*it).second );
-        (*it).first->write( rock_rbs );
+        RigidBodyState rbs;
+        rbs.sourceFrame = std::string( (*it).second->GetName() );
+        rbs.targetFrame = std::string( world->GetName() );
+
+        math::Pose link_pose = (*it).second->GetWorldPose();
+        rbs.position = base::Vector3d(
+            link_pose.pos.x,link_pose.pos.y,link_pose.pos.z);
+        rbs.orientation = base::Quaterniond(
+            link_pose.rot.w,link_pose.rot.x,link_pose.rot.y,link_pose.rot.z );
+
+        (*it).first->write( rbs );
     }
 }
 
@@ -112,8 +122,8 @@ bool ModelTask::configureHook()
     if( ! ModelTaskBase::configureHook() )
         return false;
 
-    // Test if setGazeboModel() has been called -> if a model has been found
-    if( ! model )
+    // Test if setGazeboModel() has been called -> if world/model has been found
+    if( (!world) && (!model) )
         return false;
 
     // The robot configuration YAML file must define the link that will be exported.
@@ -125,17 +135,3 @@ bool ModelTask::configureHook()
     return true;
 }
 
-base::samples::RigidBodyState ModelTask::createRBS(LinkPtr link)
-{
-    RigidBodyState rbs;
-
-    rbs.sourceFrame = std::string( model->GetName() );
-    rbs.targetFrame = std::string( link->GetName() );
-
-    math::Pose link_pose = link->GetWorldPose();
-    rbs.position = base::Vector3d(link_pose.pos.x,link_pose.pos.y,link_pose.pos.z);
-    rbs.orientation = base::Quaterniond(
-        link_pose.rot.w,link_pose.rot.x,link_pose.rot.y,link_pose.rot.z );
-
-    return rbs;
-}

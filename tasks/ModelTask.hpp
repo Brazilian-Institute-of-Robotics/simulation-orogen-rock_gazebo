@@ -31,7 +31,7 @@ namespace rock_gazebo {
             Joint_V gazebo_joints;
             Link_V gazebo_links;
 
-            base::samples::Joints joints_in, joints_out;
+            base::samples::Joints joints_in;
             void setupJoints();
             void updateJoints();
 
@@ -42,8 +42,6 @@ namespace rock_gazebo {
             LinkOutput link_list;
             void setupLinks(NameVector);
             void updateLinks();
-
-            RigidBodyState createRBS(LinkPtr);
 
         protected:
 		
