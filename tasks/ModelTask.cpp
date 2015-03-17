@@ -23,8 +23,9 @@ ModelTask::ModelTask(std::string const& name, RTT::ExecutionEngine* engine)
 
 ModelTask::~ModelTask()
 {
-    for(LinkOutput::iterator it = link_list.begin(); it != link_list.end(); ++it)
-        delete (*it).first;
+    for(std::vector<RBSOutPort*>::iterator it = exported_links.link_out_port.begin();
+            it != exported_links.link_out_port.end(); ++it)
+        delete (*it);
 }
 
 void ModelTask::setGazeboModel(WorldPtr _world,  ModelPtr _model)
@@ -51,26 +52,29 @@ void ModelTask::setupJoints()
     }
 }
 
-void ModelTask::setupLinks(NameVector link_names)
+void ModelTask::setupLinks()
 {
-    // Create Rock output ports for the links defined in the configuration file.
-	gazebo_links = model->GetLinks();
-	for(Link_V::iterator link = gazebo_links.begin(); link != gazebo_links.end(); ++link)
-	{
-        for(NameVector::iterator it = link_names.begin(); it != link_names.end(); ++it)
-        {
-            if( (*it) == (*link)->GetName()  )
-            {
-                gzmsg << "ModelTask: found link: " << world->GetName() + "/" + model->GetName() +
-                    "/" + (*link)->GetName() << std::endl;
+    NameVector source_links_names = _source_links.get();
+    NameVector target_links_names = _target_links.get();
 
-                // Create the ports dynamicaly
-                RBSOutPort* link_out_port = new RBSOutPort( (*link)->GetName() );
-                ports()->addPort(*link_out_port);
-                link_list.push_back( std::make_pair(link_out_port,*link) );
-            }
-        }
-	}
+    // Create Rock output ports for the links defined in the configuration file.
+    for(NameVector::iterator link_name = source_links_names.begin();
+            link_name != source_links_names.end(); ++link_name)
+    {
+        gzmsg << "ModelTask: found link: " << world->GetName() + "/" + model->GetName() +
+            "/" + *link_name << std::endl;
+
+        exported_links.source_links.push_back( model->GetLink( *link_name ) );
+
+        // Create the ports dynamicaly
+        RBSOutPort* link_out_port = new RBSOutPort( *link_name );
+        ports()->addPort(*link_out_port);
+        exported_links.link_out_port.push_back( link_out_port );
+    }
+
+    for(NameVector::iterator link_name = target_links_names.begin();
+            link_name != target_links_names.end(); ++link_name)
+        exported_links.target_links.push_back( model->GetLink( *link_name ) );
 }
 
 void ModelTask::updateHook()
@@ -101,19 +105,25 @@ void ModelTask::updateJoints()
 
 void ModelTask::updateLinks()
 {
-    for(LinkOutput::iterator it = link_list.begin(); it != link_list.end(); ++it)
+    for(size_t i = 0; i < exported_links.source_links.size(); ++i )
     {
+        exported_links.source_frame[i] = exported_links.source_links[i]->GetWorldPose();
+        if( exported_links.target_links[i]->GetName() == world->GetName() ){
+            exported_links.target_frame[i] = math::Pose::Zero;
+        } else{
+            exported_links.target_frame[i] = exported_links.target_links[i]->GetWorldPose();
+        }
+
+        gazebo::math::Pose relative_pose( math::Pose(
+                exported_links.source_frame[i] - exported_links.target_frame[i] ) );
+
         RigidBodyState rbs;
-        rbs.sourceFrame = std::string( (*it).second->GetName() );
-        rbs.targetFrame = std::string( world->GetName() );
-
-        math::Pose link_pose = (*it).second->GetWorldPose();
         rbs.position = base::Vector3d(
-            link_pose.pos.x,link_pose.pos.y,link_pose.pos.z);
+            relative_pose.pos.x,relative_pose.pos.y,relative_pose.pos.z);
         rbs.orientation = base::Quaterniond(
-            link_pose.rot.w,link_pose.rot.x,link_pose.rot.y,link_pose.rot.z );
+            relative_pose.rot.w,relative_pose.rot.x,relative_pose.rot.y,relative_pose.rot.z );
 
-        (*it).first->write( rbs );
+        exported_links.link_out_port[i]->write( rbs );
     }
 }
 
@@ -128,8 +138,8 @@ bool ModelTask::configureHook()
 
     // The robot configuration YAML file must define the link that will be exported.
     // Than, these links will be loaded in link_names;
-    NameVector link_names = _exported_links.get();
-    setupLinks(link_names);
+
+    setupLinks();
     setupJoints();
 
     return true;
