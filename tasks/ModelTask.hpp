@@ -10,7 +10,6 @@
 #include "rock_gazebo/ModelTaskBase.hpp"	
 #include <gazebo/physics/physics.hh>
 
-
 namespace rock_gazebo {
     class ModelTask : public ModelTaskBase
     {
@@ -35,26 +34,22 @@ namespace rock_gazebo {
             void setupJoints();
             void updateJoints();
 
-            typedef std::vector<std::string> NameVector;
             typedef base::samples::RigidBodyState RigidBodyState;
             typedef RTT::OutputPort<RigidBodyState> RBSOutPort;
+            typedef std::vector< std::pair<LinkExport,RBSOutPort*> > LinkPort;
+            LinkPort link_port;
             void setupLinks();
             void updateLinks();
 
-            struct LinkExport {
-                std::vector<RBSOutPort*> link_out_port;
-                std::vector<LinkPtr> source_links;
-                std::vector<LinkPtr> target_links;
-                std::vector<gazebo::math::Pose> source_frame;
-                std::vector<gazebo::math::Pose> target_frame;
-            } exported_links ;
+            std::vector<LinkExport> exported_links_list;
+            std::string checkExportedLinkElements(std::string, std::string, std::string);
 
         protected:
 		
         public:
             void setGazeboModel(WorldPtr, ModelPtr);
-            void updateHook();
 
+            void updateHook();
             bool configureHook();
 
 		    /** TaskContext constructor for ModelTask

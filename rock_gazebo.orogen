@@ -1,5 +1,6 @@
 name "rock_gazebo"
 import_types_from "base"
+import_types_from "rock_gazeboTypes.hpp"
 
 using_library "gazebo"
 
@@ -22,8 +23,7 @@ task_context "ModelTask" do
     # The model full name
     attribute "name", '/std/string'
 
-    property "source_links", "std/vector<std/string>"
-    property "target_links", "std/vector<std/string>"
+    property "exported_links", "std/vector<rock_gazebo/LinkExport>"
 
     # Joints input/output ports
     input_port "joints_cmd", "/base/samples/Joints"

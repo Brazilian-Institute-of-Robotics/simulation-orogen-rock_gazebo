@@ -23,9 +23,8 @@ ModelTask::ModelTask(std::string const& name, RTT::ExecutionEngine* engine)
 
 ModelTask::~ModelTask()
 {
-    for(std::vector<RBSOutPort*>::iterator it = exported_links.link_out_port.begin();
-            it != exported_links.link_out_port.end(); ++it)
-        delete (*it);
+    for(LinkPort::iterator it = link_port.begin(); it != link_port.end(); ++it)
+        delete (*it).second;
 }
 
 void ModelTask::setGazeboModel(WorldPtr _world,  ModelPtr _model)
@@ -54,27 +53,31 @@ void ModelTask::setupJoints()
 
 void ModelTask::setupLinks()
 {
-    NameVector source_links_names = _source_links.get();
-    NameVector target_links_names = _target_links.get();
-
-    // Create Rock output ports for the links defined in the configuration file.
-    for(NameVector::iterator link_name = source_links_names.begin();
-            link_name != source_links_names.end(); ++link_name)
+    // The robot configuration YAML file must define the exported links.
+    exported_links_list = _exported_links.get();
+    for(std::vector<LinkExport>::iterator it = exported_links_list.begin();
+            it != exported_links_list.end(); ++it)
     {
-        gzmsg << "ModelTask: found link: " << world->GetName() + "/" + model->GetName() +
-            "/" + *link_name << std::endl;
+        (*it).source_link = checkExportedLinkElements("source_link", (*it).source_link, "world");
+        (*it).target_link = checkExportedLinkElements("target_link", (*it).target_link, "world");
+        (*it).source_frame = checkExportedLinkElements("source_frame", (*it).source_frame, (*it).source_link);
+        (*it).target_frame = checkExportedLinkElements("target_frame", (*it).target_frame, (*it).target_link);
 
-        exported_links.source_links.push_back( model->GetLink( *link_name ) );
+        LinkPtr source_link = model->GetLink( (*it).source_link );
+        if ( !source_link )
+        {
+            gzmsg << "ModelTask: source_link doesn't match a link from "<< model->GetName() <<" model " << std::endl;
+            gzmsg << "Exit simulation." << std::endl;
+        }else {
+            // Create the ports dynamicaly
+            gzmsg << "ModelTask: exporting link to rock: " << world->GetName() + "/" + model->GetName() +
+                "/" + source_link->GetName() << std::endl;
 
-        // Create the ports dynamicaly
-        RBSOutPort* link_out_port = new RBSOutPort( *link_name );
-        ports()->addPort(*link_out_port);
-        exported_links.link_out_port.push_back( link_out_port );
+            RBSOutPort* link_out_port = new RBSOutPort( (*it).source_link );
+            ports()->addPort( *link_out_port);
+            link_port.push_back(std::make_pair(*it,link_out_port) );
+        }
     }
-
-    for(NameVector::iterator link_name = target_links_names.begin();
-            link_name != target_links_names.end(); ++link_name)
-        exported_links.target_links.push_back( model->GetLink( *link_name ) );
 }
 
 void ModelTask::updateHook()
@@ -105,25 +108,28 @@ void ModelTask::updateJoints()
 
 void ModelTask::updateLinks()
 {
-    for(size_t i = 0; i < exported_links.source_links.size(); ++i )
+    for(LinkPort::iterator it = link_port.begin(); it != link_port.end(); ++it)
     {
-        exported_links.source_frame[i] = exported_links.source_links[i]->GetWorldPose();
-        if( exported_links.target_links[i]->GetName() == world->GetName() ){
-            exported_links.target_frame[i] = math::Pose::Zero;
+        math::Pose source_pose = model->GetLink( (*it).first.source_link )->GetWorldPose();
+        math::Pose target_pose;
+        if( (*it).first.target_link == "world" )
+        {
+            target_pose = math::Pose::Zero;
         } else{
-            exported_links.target_frame[i] = exported_links.target_links[i]->GetWorldPose();
+            target_pose = model->GetLink( (*it).first.target_link )->GetWorldPose();
         }
 
-        gazebo::math::Pose relative_pose( math::Pose(
-                exported_links.source_frame[i] - exported_links.target_frame[i] ) );
+        math::Pose relative_pose( math::Pose(source_pose - target_pose) );
 
         RigidBodyState rbs;
+        rbs.sourceFrame = (*it).first.source_frame;
+        rbs.targetFrame = (*it).first.target_frame;
         rbs.position = base::Vector3d(
             relative_pose.pos.x,relative_pose.pos.y,relative_pose.pos.z);
         rbs.orientation = base::Quaterniond(
             relative_pose.rot.w,relative_pose.rot.x,relative_pose.rot.y,relative_pose.rot.z );
 
-        exported_links.link_out_port[i]->write( rbs );
+        (*it).second->write( rbs );
     }
 }
 
@@ -132,16 +138,27 @@ bool ModelTask::configureHook()
     if( ! ModelTaskBase::configureHook() )
         return false;
 
-    // Test if setGazeboModel() has been called -> if world/model has been found
+    // Test if setGazeboModel() has been called -> if world/model are NULL
     if( (!world) && (!model) )
         return false;
-
-    // The robot configuration YAML file must define the link that will be exported.
-    // Than, these links will be loaded in link_names;
 
     setupLinks();
     setupJoints();
 
     return true;
+}
+
+std::string ModelTask::checkExportedLinkElements(std::string element_name, std::string test, std::string option)
+{
+    // when not defined, source_link and target_link will recieve "world".
+    // when not defined, source_frame and target_frame will receive source_link and target_link content
+    if( test.empty() )
+    {
+        gzmsg << "ModelTask: " << model->GetName() << " " << element_name << " not defined, using "<< option << std::endl;
+        return option;
+    }else {
+        gzmsg << "ModelTask: " << model->GetName() << " " << element_name << ": " << test << std::endl;
+        return test;
+    }
 }
 
