@@ -21,51 +21,53 @@ namespace rock_gazebo {
             typedef gazebo::physics::JointPtr JointPtr;
             typedef gazebo::physics::LinkPtr LinkPtr;
 	        
-		friend class ModelTaskBase;
-		private:
-			ModelPtr model;
-			WorldPtr world;
-			sdf::ElementPtr sdf;
+        friend class ModelTaskBase;
+        private:
+            ModelPtr model;
+            WorldPtr world;
+            sdf::ElementPtr sdf;
 
-			void setJointPorts();
-			void updateJoints();
-			
-			void setLinkPorts();
-			void updateLinks();
-			
-			RTT::InputPort<double>* joint_port;
-			typedef std::vector<std::pair<RTT::InputPort<double>*,JointPtr> > JointPort_V;
-			JointPort_V joint_port_list;
-			
-			RTT::InputPort<base::Vector3d>* link_port; 
-			typedef std::vector<std::pair<RTT::InputPort<base::Vector3d>*,LinkPtr> > LinkPort_V;
-			LinkPort_V link_port_list; 
-	        
-	        Joint_V joints;
-	        Link_V links;
-	        
-		protected:
+            Joint_V gazebo_joints;
+            Link_V gazebo_links;
+
+            base::samples::Joints joints_in;
+            void setupJoints();
+            void updateJoints();
+
+            typedef base::samples::RigidBodyState RigidBodyState;
+            typedef RTT::OutputPort<RigidBodyState> RBSOutPort;
+            typedef std::vector< std::pair<LinkExport,RBSOutPort*> > LinkPort;
+            LinkPort link_port;
+            void setupLinks();
+            void updateLinks();
+
+            std::vector<LinkExport> exported_links_list;
+            std::string checkExportedLinkElements(std::string, std::string, std::string);
+
+        protected:
 		
-		public:
-			void setGazeboModel(WorldPtr, ModelPtr);	
-			void updateHook();
+        public:
+            void setGazeboModel(WorldPtr, ModelPtr);
+
+            void updateHook();
+            bool configureHook();
 
 		    /** TaskContext constructor for ModelTask
 		     * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
 		     * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
 		     */
-		    ModelTask(std::string const& name = "gazebo::ModelTask");
+            ModelTask(std::string const& name = "gazebo::ModelTask");
 
 		    /** TaskContext constructor for ModelTask 
 		     * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices. 
 		     * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task. 
 		     * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
 		     */
-		    ModelTask(std::string const& name, RTT::ExecutionEngine* engine);
+            ModelTask(std::string const& name, RTT::ExecutionEngine* engine);
 
 		    /** Default deconstructor of ModelTask
 		     */
-			~ModelTask();
+            ~ModelTask();
     };
 }
 
