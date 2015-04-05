@@ -73,7 +73,7 @@ void ModelTask::setupLinks()
             gzmsg << "ModelTask: exporting link to rock: " << world->GetName() + "/" + model->GetName() +
                 "/" + source_link->GetName() << std::endl;
 
-            RBSOutPort* link_out_port = new RBSOutPort( (*it).source_link );
+            RBSOutPort* link_out_port = new RBSOutPort( (*it).source_frame + "2" + (*it).target_frame );
             ports()->addPort( *link_out_port);
             link_port.push_back(std::make_pair(*it,link_out_port) );
         }
