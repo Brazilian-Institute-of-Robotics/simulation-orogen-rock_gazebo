@@ -11,13 +11,12 @@ using namespace gazebo;
 using namespace rock_gazebo;
 using namespace std;
 
-
-ModelTask::ModelTask(std::string const& name)
+ModelTask::ModelTask(string const& name)
 	: ModelTaskBase(name)
 {
 }
 
-ModelTask::ModelTask(std::string const& name, RTT::ExecutionEngine* engine)
+ModelTask::ModelTask(string const& name, RTT::ExecutionEngine* engine)
 	: ModelTaskBase(name, engine)
 {
 }
@@ -30,7 +29,7 @@ ModelTask::~ModelTask()
 
 void ModelTask::setGazeboModel(WorldPtr _world,  ModelPtr _model)
 {
-    std::string name = "gazebo:" + _world->GetName() + ":" + _model->GetName();
+    string name = "gazebo:" + _world->GetName() + ":" + _model->GetName();
     provides()->setName(name);
     _name.set(name);
 
@@ -45,7 +44,7 @@ void ModelTask::setupJoints()
     for(Joint_V::iterator joint = gazebo_joints.begin(); joint != gazebo_joints.end(); ++joint)
     {
         gzmsg << "ModelTask: found joint: " << world->GetName() + "/" + model->GetName() +
-                "/" + (*joint)->GetName() << std::endl;
+                "/" + (*joint)->GetName() << endl;
 
         joints_in.names.push_back( (*joint)->GetName() );
         joints_in.elements.push_back( base::JointState::Effort(0.0) );
@@ -105,8 +104,8 @@ void ModelTask::updateJoints()
 {
     _joints_cmd.readNewest( joints_in );
 
-    std::vector<std::string> names;
-    std::vector<double> positions;
+    vector<string> names;
+    vector<double> positions;
 
     for(Joint_V::iterator it = gazebo_joints.begin(); it != gazebo_joints.end(); ++it )
     {
@@ -160,16 +159,16 @@ bool ModelTask::configureHook()
     return true;
 }
 
-std::string ModelTask::checkExportedLinkElements(std::string element_name, std::string test, std::string option)
+string ModelTask::checkExportedLinkElements(string element_name, string test, string option)
 {
     // when not defined, source_link and target_link will recieve "world".
     // when not defined, source_frame and target_frame will receive source_link and target_link content
     if( test.empty() )
     {
-        gzmsg << "ModelTask: " << model->GetName() << " " << element_name << " not defined, using "<< option << std::endl;
+        gzmsg << "ModelTask: " << model->GetName() << " " << element_name << " not defined, using "<< option << endl;
         return option;
     }else {
-        gzmsg << "ModelTask: " << model->GetName() << " " << element_name << ": " << test << std::endl;
+        gzmsg << "ModelTask: " << model->GetName() << " " << element_name << ": " << test << endl;
         return test;
     }
 }
