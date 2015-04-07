@@ -51,6 +51,7 @@ namespace rock_gazebo {
 
             void setupLinks();
             void updateLinks();
+            void updateModelPose();
 
             std::string checkExportedLinkElements(std::string, std::string, std::string);
 

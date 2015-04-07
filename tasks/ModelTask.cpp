@@ -95,8 +95,24 @@ void ModelTask::setupLinks()
 
 void ModelTask::updateHook()
 {
+    updateModelPose();
     updateJoints();
     updateLinks();
+}
+
+void ModelTask::updateModelPose()
+{
+    math::Pose model2world = model->GetWorldPose();
+
+    RigidBodyState rbs;
+    rbs.invalidate();
+    rbs.sourceFrame = _model_frame.get();
+    rbs.targetFrame = _world_frame.get();
+    rbs.position = base::Vector3d(
+        model2world.pos.x,model2world.pos.y,model2world.pos.z);
+    rbs.orientation = base::Quaterniond(
+        model2world.rot.w,model2world.rot.x,model2world.rot.y,model2world.rot.z );
+    _pose_samples.write(rbs);
 }
 
 void ModelTask::updateJoints()
