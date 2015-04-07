@@ -40,7 +40,6 @@ void ModelTask::setGazeboModel(WorldPtr _world,  ModelPtr _model)
 void ModelTask::setupJoints()
 {
     // Get all joints from a model and set Rock Input/Output Ports
-    gazebo_joints = model->GetJoints();
     for(Joint_V::iterator joint = gazebo_joints.begin(); joint != gazebo_joints.end(); ++joint)
     {
         gzmsg << "ModelTask: found joint: " << world->GetName() + "/" + model->GetName() +
@@ -153,6 +152,8 @@ bool ModelTask::configureHook()
     if( (!world) && (!model) )
         return false;
 
+    gazebo_links = model->GetLinks();
+    gazebo_joints = model->GetJoints();
     setupLinks();
     setupJoints();
 
