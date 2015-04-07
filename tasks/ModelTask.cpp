@@ -54,6 +54,7 @@ void ModelTask::setupLinks()
 {
     // The robot configuration YAML file must define the exported links.
     vector<LinkExport> export_conf = _exported_links.get();
+    set<string> port_names;
     for(vector<LinkExport>::iterator it = export_conf.begin();
             it != export_conf.end(); ++it)
     {
@@ -80,16 +81,36 @@ void ModelTask::setupLinks()
             gzmsg << "ModelTask: cannot find link " << it->target_link << " in model" << endl;
             gzmsg << "Exiting simulation." << endl;
         }
-        else
+        else if (it->port_name.empty())
         {
-            // Create the ports dynamicaly
-            gzmsg << "ModelTask: exporting link to rock: " << world->GetName() + "/" + model->GetName() +
-                "/" + exported_link.source_link_ptr->GetName() << "2" << exported_link.target_link_ptr->GetName() << endl;
-
-            exported_link.port = new RBSOutPort( it->source_frame + "2" + it->target_frame );
-            ports()->addPort(*exported_link.port);
-            exported_links.push_back(exported_link);
+            gzmsg << "ModelTask: no port name given" << endl;
+            gzmsg << "Exiting simulation." << endl;
         }
+        else if (ports()->getPort(it->port_name))
+        {
+            gzmsg << "ModelTask: provided port name " << it->port_name << " already in use on this component" << endl;
+            gzmsg << "Exiting simulation." << endl;
+        }
+        else if (port_names.count(it->port_name) != 0)
+        {
+            gzmsg << "ModelTask: duplicate port name " << it->port_name << " in exported links" << endl;
+            gzmsg << "Exiting simulation." << endl;
+        }
+        port_names.insert(it->port_name);
+        exported_links.push_back(exported_link);
+    }
+
+
+    for (ExportedLinks::iterator it = exported_links.begin(); it != exported_links.end(); ++it)
+    {
+        // Create the ports dynamicaly
+        gzmsg << "ModelTask: exporting link "
+            << world->GetName() + "/" + model->GetName() + "/" + it->source_link << "2" << it->target_link
+            << " through port " << it->port_name
+            << endl;
+
+        it->port = new RBSOutPort( it->port_name );
+        ports()->addPort(*it->port);
     }
 }
 
