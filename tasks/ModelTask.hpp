@@ -36,12 +36,22 @@ namespace rock_gazebo {
 
             typedef base::samples::RigidBodyState RigidBodyState;
             typedef RTT::OutputPort<RigidBodyState> RBSOutPort;
-            typedef std::vector< std::pair<LinkExport,RBSOutPort*> > LinkPort;
-            LinkPort link_port;
+
+            struct ExportedLink : public LinkExport
+            {
+                LinkPtr source_link_ptr;
+                LinkPtr target_link_ptr;
+                RBSOutPort* port;
+
+                ExportedLink()
+                    : port(NULL) { }
+            };
+            typedef std::vector<ExportedLink> ExportedLinks;
+            ExportedLinks exported_links;
+
             void setupLinks();
             void updateLinks();
 
-            std::vector<LinkExport> exported_links_list;
             std::string checkExportedLinkElements(std::string, std::string, std::string);
 
         protected:

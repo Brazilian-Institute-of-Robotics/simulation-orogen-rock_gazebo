@@ -9,6 +9,7 @@
 
 using namespace gazebo;
 using namespace rock_gazebo;
+using namespace std;
 
 
 ModelTask::ModelTask(std::string const& name)
@@ -23,8 +24,8 @@ ModelTask::ModelTask(std::string const& name, RTT::ExecutionEngine* engine)
 
 ModelTask::~ModelTask()
 {
-    for(LinkPort::iterator it = link_port.begin(); it != link_port.end(); ++it)
-        delete (*it).second;
+    for(ExportedLinks::iterator it = exported_links.begin(); it != exported_links.end(); ++it)
+        delete it->port;
 }
 
 void ModelTask::setGazeboModel(WorldPtr _world,  ModelPtr _model)
@@ -54,28 +55,42 @@ void ModelTask::setupJoints()
 void ModelTask::setupLinks()
 {
     // The robot configuration YAML file must define the exported links.
-    exported_links_list = _exported_links.get();
-    for(std::vector<LinkExport>::iterator it = exported_links_list.begin();
-            it != exported_links_list.end(); ++it)
+    vector<LinkExport> export_conf = _exported_links.get();
+    for(vector<LinkExport>::iterator it = export_conf.begin();
+            it != export_conf.end(); ++it)
     {
-        (*it).source_link = checkExportedLinkElements("source_link", (*it).source_link, "world");
-        (*it).target_link = checkExportedLinkElements("target_link", (*it).target_link, "world");
-        (*it).source_frame = checkExportedLinkElements("source_frame", (*it).source_frame, (*it).source_link);
-        (*it).target_frame = checkExportedLinkElements("target_frame", (*it).target_frame, (*it).target_link);
+        ExportedLink exported_link;
 
-        LinkPtr source_link = model->GetLink( (*it).source_link );
-        if ( !source_link )
+        exported_link.source_link =
+            checkExportedLinkElements("source_link", it->source_link, "world");
+        exported_link.target_link =
+            checkExportedLinkElements("target_link", it->target_link, "world");
+        exported_link.source_frame =
+            checkExportedLinkElements("source_frame", it->source_frame, it->source_link);
+        exported_link.target_frame =
+            checkExportedLinkElements("target_frame", it->target_frame, it->target_link);
+        exported_link.source_link_ptr = model->GetLink( it->source_link );
+        exported_link.target_link_ptr = model->GetLink( it->target_link );
+
+        if (it->source_link != "world" && !exported_link.source_link_ptr)
         {
-            gzmsg << "ModelTask: source_link doesn't match a link from "<< model->GetName() <<" model " << std::endl;
-            gzmsg << "Exit simulation." << std::endl;
-        }else {
+            gzmsg << "ModelTask: cannot find link " << it->source_link << " in model" << endl;
+            gzmsg << "Exiting simulation." << endl;
+        }
+        else if (it->target_link != "world" && !exported_link.target_link_ptr)
+        {
+            gzmsg << "ModelTask: cannot find link " << it->target_link << " in model" << endl;
+            gzmsg << "Exiting simulation." << endl;
+        }
+        else
+        {
             // Create the ports dynamicaly
             gzmsg << "ModelTask: exporting link to rock: " << world->GetName() + "/" + model->GetName() +
-                "/" + source_link->GetName() << std::endl;
+                "/" + exported_link.source_link_ptr->GetName() << "2" << exported_link.target_link_ptr->GetName() << endl;
 
-            RBSOutPort* link_out_port = new RBSOutPort( (*it).source_frame + "2" + (*it).target_frame );
-            ports()->addPort( *link_out_port);
-            link_port.push_back(std::make_pair(*it,link_out_port) );
+            exported_link.port = new RBSOutPort( it->source_frame + "2" + it->target_frame );
+            ports()->addPort(*exported_link.port);
+            exported_links.push_back(exported_link);
         }
     }
 }
@@ -108,28 +123,25 @@ void ModelTask::updateJoints()
 
 void ModelTask::updateLinks()
 {
-    for(LinkPort::iterator it = link_port.begin(); it != link_port.end(); ++it)
+    for(ExportedLinks::const_iterator it = exported_links.begin(); it != exported_links.end(); ++it)
     {
-        math::Pose source_pose = model->GetLink( (*it).first.source_link )->GetWorldPose();
-        math::Pose target_pose;
-        if( (*it).first.target_link == "world" )
-        {
-            target_pose = math::Pose::Zero;
-        } else{
-            target_pose = model->GetLink( (*it).first.target_link )->GetWorldPose();
-        }
-
+        math::Pose source_pose = math::Pose::Zero;
+        if (it->source_link_ptr)
+            source_pose = it->source_link_ptr->GetWorldPose();
+        math::Pose target_pose = math::Pose::Zero;
+        if (it->target_link_ptr)
+            target_pose = it->target_link_ptr->GetWorldPose();
         math::Pose relative_pose( math::Pose(source_pose - target_pose) );
 
         RigidBodyState rbs;
-        rbs.sourceFrame = (*it).first.source_frame;
-        rbs.targetFrame = (*it).first.target_frame;
+        rbs.sourceFrame = it->source_frame;
+        rbs.targetFrame = it->target_frame;
         rbs.position = base::Vector3d(
             relative_pose.pos.x,relative_pose.pos.y,relative_pose.pos.z);
         rbs.orientation = base::Quaterniond(
             relative_pose.rot.w,relative_pose.rot.x,relative_pose.rot.y,relative_pose.rot.z );
 
-        (*it).second->write( rbs );
+        it->port->write(rbs);
     }
 }
 
