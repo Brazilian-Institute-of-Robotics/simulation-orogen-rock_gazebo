@@ -197,6 +197,15 @@ bool ModelTask::configureHook()
     return true;
 }
 
+void ModelTask::cleanupHook()
+{
+    ModelTaskBase::cleanupHook();
+
+    for(ExportedLinks::iterator it = exported_links.begin(); it != exported_links.end(); ++it)
+        delete it->port;
+    exported_links.clear();
+}
+
 string ModelTask::checkExportedLinkElements(string element_name, string test, string option)
 {
     // when not defined, source_link and target_link will recieve "world".
