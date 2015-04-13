@@ -26,11 +26,17 @@ bool ThrusterTask::configureHook()
     if (! ThrusterTaskBase::configureHook())
         return false;
 
+    // Set gazebo topic to advertise
     node = transport::NodePtr( new transport::Node() );
     node->Init();
-    thrusterPublisher = node->Advertise<ThrusterInput>("~/" + model->GetName());
+    std::string topicName = model->GetName() + "/thruster";
+    thrusterPublisher = node->Advertise<JointsMSG>("~/" + topicName);
+    gzmsg <<"ThrusterTask: subscribing to gazebo topic /gazebo/"+ model->GetWorld()->GetName()
+            + "/" + topicName << std::endl;
     return true;
 }
+
+
 bool ThrusterTask::startHook()
 {
     if (! ThrusterTaskBase::startHook())
@@ -42,16 +48,31 @@ void ThrusterTask::updateHook()
 {
     ThrusterTaskBase::updateHook();
 
-    // Read Rock input port
-    double thrusterFrequency;
-    _thruster_frequency.read(thrusterFrequency);
+    // Read Rock input port and update the message
+    _thrusters_cmd.readNewest( jointsCMD );
+    JointsMSG jointsMSG;
+    for(std::vector<std::string>::iterator jointName = jointsCMD.names.begin();
+            jointName != jointsCMD.names.end(); ++jointName)
+    {
+        base::JointState jointState = jointsCMD.getElementByName(*jointName);
+        if( jointState.isRaw() )
+        {
+            rock_thruster::msgs::Raw* raw = jointsMSG.add_raw();
+            raw->set_name( *jointName );
+            raw->set_raw( jointState.raw );
+        }
+        if( jointState.isEffort() )
+        {
+            rock_thruster::msgs::Effort* effort = jointsMSG.add_effort();
+            effort->set_name( *jointName );
+            effort->set_effort( jointState.effort );
+        }
+    }
 
     // Write in gazebo topic
     if(thrusterPublisher->HasConnections())
     {
-        ThrusterInput thrusterMsg;
-        thrusterMsg.set_frequency(thrusterFrequency);
-        thrusterPublisher->Publish(thrusterMsg);
+        thrusterPublisher->Publish(jointsMSG);
     }else{
         gzthrow("ThrusterTask: publisher has no connections.");
     }

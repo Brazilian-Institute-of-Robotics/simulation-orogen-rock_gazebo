@@ -36,6 +36,6 @@ task_context "ThrusterTask" do
     attribute "name", "/std/string"
 
     # Thruster input port
-    input_port "thruster_frequency", "double"
+    input_port "thrusters_cmd", "/base/samples/Joints"
 end
 
