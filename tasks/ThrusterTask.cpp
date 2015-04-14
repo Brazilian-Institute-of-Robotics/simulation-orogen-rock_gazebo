@@ -55,18 +55,13 @@ void ThrusterTask::updateHook()
             jointName != jointsCMD.names.end(); ++jointName)
     {
         base::JointState jointState = jointsCMD.getElementByName(*jointName);
+        rock_thruster::msgs::Thruster* thruster = jointsMSG.add_thruster();
+        thruster->set_name( *jointName );
         if( jointState.isRaw() )
-        {
-            rock_thruster::msgs::Raw* raw = jointsMSG.add_raw();
-            raw->set_name( *jointName );
-            raw->set_raw( jointState.raw );
-        }
+            thruster->set_raw( jointState.raw );
+
         if( jointState.isEffort() )
-        {
-            rock_thruster::msgs::Effort* effort = jointsMSG.add_effort();
-            effort->set_name( *jointName );
-            effort->set_effort( jointState.effort );
-        }
+            thruster->set_effort( jointState.effort );
     }
 
     // Write in gazebo topic
