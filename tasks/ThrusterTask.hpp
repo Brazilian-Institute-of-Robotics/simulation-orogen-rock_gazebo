@@ -16,7 +16,7 @@ namespace rock_gazebo {
     public:
         typedef gazebo::physics::ModelPtr ModelPtr;
         typedef gazebo::physics::WorldPtr WorldPtr;
-        typedef rock_thruster::msgs::Joints JointsMSG;
+        typedef rock_thruster::msgs::Thrusters ThrustersMSG;
 
         ThrusterTask(std::string const& name = "rock_gazebo::ThrusterTask");
         ThrusterTask(std::string const& name, RTT::ExecutionEngine* engine);
