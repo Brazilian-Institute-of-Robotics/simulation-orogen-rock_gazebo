@@ -35,6 +35,11 @@ void ModelTask::setGazeboModel(WorldPtr _world,  ModelPtr _model)
 
     world = _world;
     model = _model;
+
+    if (_model_frame.get().empty())
+        _model_frame.set(_model->GetName());
+    if (_world_frame.get().empty())
+        _world_frame.set(_world->GetName());
 } 
 
 void ModelTask::setupJoints()
