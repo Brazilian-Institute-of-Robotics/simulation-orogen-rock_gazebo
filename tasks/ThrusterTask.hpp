@@ -25,10 +25,9 @@ namespace rock_gazebo {
         bool configureHook();
         bool startHook();
         void updateHook();
-
-//        void errorHook();
-//        void stopHook();
-//        void cleanupHook();
+        void errorHook();
+        void stopHook();
+        void cleanupHook();
 
         void setGazeboModel(WorldPtr, ModelPtr);
 

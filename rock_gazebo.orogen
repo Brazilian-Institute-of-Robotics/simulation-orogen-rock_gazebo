@@ -32,6 +32,8 @@ end
 task_context "ThrusterTask" do
     needs_configuration
 
+    exception_states 'NO_TOPIC_CONNECTION'
+
     # Thruster full name
     attribute "name", "/std/string"
 

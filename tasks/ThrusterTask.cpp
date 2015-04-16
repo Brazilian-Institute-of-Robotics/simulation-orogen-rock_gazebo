@@ -41,6 +41,7 @@ bool ThrusterTask::startHook()
 {
     if (! ThrusterTaskBase::startHook())
         return false;
+
     return true;
 }
 
@@ -69,22 +70,27 @@ void ThrusterTask::updateHook()
     {
         thrusterPublisher->Publish(thrustersMSG);
     }else{
-        gzthrow("ThrusterTask: publisher has no connections.");
+        gzmsg << "ThrusterTask: publisher has no connections. Going into exception" << std::endl;
+        exception(NO_TOPIC_CONNECTION);
     }
 }
 
-//void ThrusterTask::errorHook()
-//{
-//    ThrusterTaskBase::errorHook();
-//}
-//void ThrusterTask::stopHook()
-//{
-//    ThrusterTaskBase::stopHook();
-//}
-//void ThrusterTask::cleanupHook()
-//{
-//    ThrusterTaskBase::cleanupHook();
-//}
+void ThrusterTask::errorHook()
+{
+    ThrusterTaskBase::errorHook();
+}
+
+void ThrusterTask::stopHook()
+{
+    ThrusterTaskBase::stopHook();
+}
+
+void ThrusterTask::cleanupHook()
+{
+    ThrusterTaskBase::cleanupHook();
+
+    node->Fini();
+}
 
 void ThrusterTask::setGazeboModel(WorldPtr _world,  ModelPtr _model)
 {
