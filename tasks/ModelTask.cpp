@@ -194,7 +194,6 @@ bool ModelTask::configureHook()
     if( (!world) && (!model) )
         return false;
 
-    gazebo_links = model->GetLinks();
     gazebo_joints = model->GetJoints();
     setupLinks();
     setupJoints();

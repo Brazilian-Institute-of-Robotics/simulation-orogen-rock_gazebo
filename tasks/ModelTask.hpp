@@ -28,7 +28,6 @@ namespace rock_gazebo {
             sdf::ElementPtr sdf;
 
             Joint_V gazebo_joints;
-            Link_V gazebo_links;
 
             base::samples::Joints joints_in;
             void setupJoints();
