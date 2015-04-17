@@ -6,6 +6,8 @@
 namespace rock_gazebo
 {
     struct LinkExport {
+        // The port name
+        std::string port_name;
         // The RBS sourceFrame, leave empty to use source_link
         std::string source_frame;
         // The RBS targetFrame, leave empty to use target_link

@@ -23,7 +23,17 @@ task_context "ModelTask" do
     # The model full name
     attribute "name", '/std/string'
 
+    # The frame name for the model pose. It will, by default, be set to the
+    # model's name (e.g. flat_fish)
+    property 'model_frame', '/std/string'
+    # The frame name for the model pose. It will, by default, be set to the
+    # world's full name (e.g. underwater)
+    property 'world_frame', '/std/string'
+    # The pose of the model w.r.t. the world frame
+    output_port 'pose_samples', '/base/samples/RigidBodyState'
+
     property "exported_links", "std/vector<rock_gazebo/LinkExport>"
+
 
     # Joints input/output ports
     input_port "joints_cmd", "/base/samples/Joints"

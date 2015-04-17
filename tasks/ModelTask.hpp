@@ -28,7 +28,6 @@ namespace rock_gazebo {
             sdf::ElementPtr sdf;
 
             Joint_V gazebo_joints;
-            Link_V gazebo_links;
 
             base::samples::Joints joints_in;
             void setupJoints();
@@ -36,12 +35,23 @@ namespace rock_gazebo {
 
             typedef base::samples::RigidBodyState RigidBodyState;
             typedef RTT::OutputPort<RigidBodyState> RBSOutPort;
-            typedef std::vector< std::pair<LinkExport,RBSOutPort*> > LinkPort;
-            LinkPort link_port;
+
+            struct ExportedLink : public LinkExport
+            {
+                LinkPtr source_link_ptr;
+                LinkPtr target_link_ptr;
+                RBSOutPort* port;
+
+                ExportedLink()
+                    : port(NULL) { }
+            };
+            typedef std::vector<ExportedLink> ExportedLinks;
+            ExportedLinks exported_links;
+
             void setupLinks();
             void updateLinks();
+            void updateModelPose();
 
-            std::vector<LinkExport> exported_links_list;
             std::string checkExportedLinkElements(std::string, std::string, std::string);
 
         protected:
@@ -51,6 +61,7 @@ namespace rock_gazebo {
 
             void updateHook();
             bool configureHook();
+            void cleanupHook();
 
 		    /** TaskContext constructor for ModelTask
 		     * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
