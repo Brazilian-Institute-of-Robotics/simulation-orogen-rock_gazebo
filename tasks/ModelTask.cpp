@@ -6,6 +6,7 @@
 //====================================================================================== 
 
 #include "ModelTask.hpp"
+#include <gazebo/common/Exception.hh>
 
 using namespace gazebo;
 using namespace rock_gazebo;
@@ -77,30 +78,16 @@ void ModelTask::setupLinks()
         exported_link.target_link_ptr = model->GetLink( it->target_link );
 
         if (it->source_link != "world" && !exported_link.source_link_ptr)
-        {
-            gzmsg << "ModelTask: cannot find link " << it->source_link << " in model" << endl;
-            gzmsg << "Exiting simulation." << endl;
-        }
+        { gzthrow("ModelTask: cannot find exported source link " << it->source_link << " in model"); }
         else if (it->target_link != "world" && !exported_link.target_link_ptr)
-        {
-            gzmsg << "ModelTask: cannot find link " << it->target_link << " in model" << endl;
-            gzmsg << "Exiting simulation." << endl;
-        }
+        { gzthrow("ModelTask: cannot find exported target link " << it->target_link << " in model"); }
         else if (it->port_name.empty())
-        {
-            gzmsg << "ModelTask: no port name given" << endl;
-            gzmsg << "Exiting simulation." << endl;
-        }
+        { gzthrow("ModelTask: no port name given in link export"); }
         else if (ports()->getPort(it->port_name))
-        {
-            gzmsg << "ModelTask: provided port name " << it->port_name << " already in use on this component" << endl;
-            gzmsg << "Exiting simulation." << endl;
-        }
+        { gzthrow("ModelTask: provided port name " << it->port_name << " already used on the task interface"); }
         else if (port_names.count(it->port_name) != 0)
-        {
-            gzmsg << "ModelTask: duplicate port name " << it->port_name << " in exported links" << endl;
-            gzmsg << "Exiting simulation." << endl;
-        }
+        { gzthrow("ModelTask: provided port name " << it->port_name << " already used by another exported link"); }
+
         port_names.insert(it->port_name);
         exported_links.push_back(exported_link);
     }
