@@ -24,7 +24,7 @@ task_context "ModelTask" do
     attribute "name", '/std/string'
 
     # The frame name for the model pose. It will, by default, be set to the
-    # model's full name (e.g. underwater::flat_fish)
+    # model's name (e.g. flat_fish)
     property 'model_frame', '/std/string'
     # The frame name for the model pose. It will, by default, be set to the
     # world's full name (e.g. underwater)
