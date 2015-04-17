@@ -6,8 +6,7 @@
 #include "rock_gazebo/ThrusterTaskBase.hpp"
 #include <gazebo/physics/physics.hh>
 #include <gazebo/transport/transport.hh>
-
-#include <thruster_types/thruster_types.pb.h>
+#include <gazebo_thruster/msgs.pb.h>
 
 namespace rock_gazebo {
     class ThrusterTask : public ThrusterTaskBase
@@ -16,7 +15,7 @@ namespace rock_gazebo {
     public:
         typedef gazebo::physics::ModelPtr ModelPtr;
         typedef gazebo::physics::WorldPtr WorldPtr;
-        typedef rock_thruster::msgs::Thrusters ThrustersMSG;
+        typedef gazebo_thruster::msgs::Thrusters ThrustersMSG;
 
         ThrusterTask(std::string const& name = "rock_gazebo::ThrusterTask");
         ThrusterTask(std::string const& name, RTT::ExecutionEngine* engine);

@@ -3,6 +3,7 @@ import_types_from "base"
 import_types_from "rock_gazeboTypes.hpp"
 
 using_library "gazebo"
+using_library "gazebo_thruster"
 
 # Representation of a gazebo World object
 task_context "WorldTask" do

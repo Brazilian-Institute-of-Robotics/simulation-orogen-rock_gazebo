@@ -2,8 +2,6 @@
 
 #include "ThrusterTask.hpp"
 
-#include <gazebo/msgs/msgs.hh>
-
 using namespace gazebo;
 using namespace rock_gazebo;
 
@@ -56,7 +54,7 @@ void ThrusterTask::updateHook()
             jointName != jointsCMD.names.end(); ++jointName)
     {
         base::JointState jointState = jointsCMD.getElementByName(*jointName);
-        rock_thruster::msgs::Thruster* thruster = thrustersMSG.add_thrusters();
+        gazebo_thruster::msgs::Thruster* thruster = thrustersMSG.add_thrusters();
         thruster->set_name( *jointName );
         if( jointState.isRaw() )
             thruster->set_raw( jointState.raw );
