@@ -2,15 +2,16 @@
 
 #include "ThrusterTask.hpp"
 
+using namespace std;
 using namespace gazebo;
 using namespace rock_gazebo;
 
-ThrusterTask::ThrusterTask(std::string const& name)
+ThrusterTask::ThrusterTask(string const& name)
     : ThrusterTaskBase(name)
 {
 }
 
-ThrusterTask::ThrusterTask(std::string const& name, RTT::ExecutionEngine* engine)
+ThrusterTask::ThrusterTask(string const& name, RTT::ExecutionEngine* engine)
     : ThrusterTaskBase(name, engine)
 {
 }
@@ -27,10 +28,10 @@ bool ThrusterTask::configureHook()
     // Set gazebo topic to advertise
     node = transport::NodePtr( new transport::Node() );
     node->Init();
-    std::string topicName = model->GetName() + "/thrusters";
+    string topicName = model->GetName() + "/thrusters";
     thrusterPublisher = node->Advertise<ThrustersMSG>("~/" + topicName);
     gzmsg <<"ThrusterTask: subscribing to gazebo topic /gazebo/"+ model->GetWorld()->GetName()
-            + "/" + topicName << std::endl;
+            + "/" + topicName << endl;
     return true;
 }
 
@@ -50,7 +51,7 @@ void ThrusterTask::updateHook()
     // Read Rock input port and update the message
     _thrusters_cmd.readNewest( jointsCMD );
     ThrustersMSG thrustersMSG;
-    for(std::vector<std::string>::iterator jointName = jointsCMD.names.begin();
+    for(vector<string>::iterator jointName = jointsCMD.names.begin();
             jointName != jointsCMD.names.end(); ++jointName)
     {
         base::JointState jointState = jointsCMD.getElementByName(*jointName);
@@ -68,7 +69,7 @@ void ThrusterTask::updateHook()
     {
         thrusterPublisher->Publish(thrustersMSG);
     }else{
-        gzmsg << "ThrusterTask: publisher has no connections. Going into exception" << std::endl;
+        gzmsg << "ThrusterTask: publisher has no connections. Going into exception" << endl;
         exception(NO_TOPIC_CONNECTION);
     }
 }
@@ -92,7 +93,7 @@ void ThrusterTask::cleanupHook()
 
 void ThrusterTask::setGazeboModel(WorldPtr _world,  ModelPtr _model)
 {
-    std::string name = "gazebo:" + _world->GetName() + ":" + _model->GetName() +
+    string name = "gazebo:" + _world->GetName() + ":" + _model->GetName() +
             ":thruster_task";
     provides()->setName(name);
     _name.set(name);
