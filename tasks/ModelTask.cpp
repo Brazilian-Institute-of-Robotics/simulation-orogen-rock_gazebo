@@ -130,22 +130,33 @@ void ModelTask::updateModelPose()
 
 void ModelTask::updateJoints()
 {
-    _joints_cmd.readNewest( joints_in );
-
+    // Read positions from Gazebo link
     vector<string> names;
     vector<double> positions;
-
     for(Joint_V::iterator it = gazebo_joints.begin(); it != gazebo_joints.end(); ++it )
     {
-        // Apply effort to joint
-        if( joints_in.getElementByName( (*it)->GetName() ).hasEffort() )
-            (*it)->SetForce(0, joints_in.getElementByName( (*it)->GetName() ).effort );
-
         // Read joint angle from gazebo link
-        names.push_back( (*it)->GetName() );
+        names.push_back( (*it)->GetScopedName() );
         positions.push_back( (*it)->GetAngle(0).Radian() );
     }
     _joints_samples.write( base::samples::Joints::Positions(positions,names) );
+
+    // If we have commands, pass them on to gazebo
+    if (_joints_cmd.readNewest( joints_in ) == RTT::NewData)
+    {
+        for(Joint_V::iterator it = gazebo_joints.begin(); it != gazebo_joints.end(); ++it )
+        {
+            base::JointState j_cmd(joints_in[(*it)->GetScopedName()]);
+
+            // Apply effort to joint
+            if( j_cmd.isEffort() )
+                (*it)->SetForce(0, j_cmd.effort );
+            else if( j_cmd.isPosition() )
+                (*it)->SetPosition(0, j_cmd.position );
+            else if( j_cmd.isSpeed() )
+                (*it)->SetVelocity(0, j_cmd.speed );
+        }
+    }
 }
 
 void ModelTask::updateLinks()
