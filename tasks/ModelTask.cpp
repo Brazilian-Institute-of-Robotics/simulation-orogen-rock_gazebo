@@ -76,6 +76,7 @@ void ModelTask::setupLinks()
             checkExportedLinkElements("target_frame", it->target_frame, it->target_link);
         exported_link.source_link_ptr = model->GetLink( it->source_link );
         exported_link.target_link_ptr = model->GetLink( it->target_link );
+        exported_link.port_name = it->port_name;
 
         if (it->source_link != "world" && !exported_link.source_link_ptr)
         { gzthrow("ModelTask: cannot find exported source link " << it->source_link << " in model"); }
