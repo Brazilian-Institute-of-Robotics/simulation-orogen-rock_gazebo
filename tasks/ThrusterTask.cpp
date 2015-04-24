@@ -49,28 +49,32 @@ void ThrusterTask::updateHook()
     ThrusterTaskBase::updateHook();
 
     // Read Rock input port and update the message
-    _thrusters_cmd.readNewest( jointsCMD );
-    ThrustersMSG thrustersMSG;
-    for(vector<string>::iterator jointName = jointsCMD.names.begin();
-            jointName != jointsCMD.names.end(); ++jointName)
+    if (_thrusters_cmd.readNewest( jointsCMD ) == RTT::NewData)
     {
-        base::JointState jointState = jointsCMD.getElementByName(*jointName);
-        gazebo_thruster::msgs::Thruster* thruster = thrustersMSG.add_thrusters();
-        thruster->set_name( *jointName );
-        if( jointState.isRaw() )
-            thruster->set_raw( jointState.raw );
+        gzmsg << "ThrusterTask: new sample" << endl;
 
-        if( jointState.isEffort() )
-            thruster->set_effort( jointState.effort );
-    }
+        ThrustersMSG thrustersMSG;
+        for(vector<string>::iterator jointName = jointsCMD.names.begin();
+                jointName != jointsCMD.names.end(); ++jointName)
+        {
+            base::JointState jointState = jointsCMD.getElementByName(*jointName);
+            gazebo_thruster::msgs::Thruster* thruster = thrustersMSG.add_thrusters();
+            thruster->set_name( *jointName );
+            if( jointState.isRaw() )
+                thruster->set_raw( jointState.raw );
 
-    // Write in gazebo topic
-    if(thrusterPublisher->HasConnections())
-    {
-        thrusterPublisher->Publish(thrustersMSG);
-    }else{
-        gzmsg << "ThrusterTask: publisher has no connections. Going into exception" << endl;
-        exception(NO_TOPIC_CONNECTION);
+            if( jointState.isEffort() )
+                thruster->set_effort( jointState.effort );
+        }
+
+        // Write in gazebo topic
+        if(thrusterPublisher->HasConnections())
+        {
+            thrusterPublisher->Publish(thrustersMSG);
+        }else{
+            gzmsg << "ThrusterTask: publisher has no connections. Going into exception" << endl;
+            exception(NO_TOPIC_CONNECTION);
+        }
     }
 }
 
