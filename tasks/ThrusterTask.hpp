@@ -19,7 +19,7 @@ namespace rock_gazebo {
 
         ThrusterTask(std::string const& name = "rock_gazebo::ThrusterTask");
         ThrusterTask(std::string const& name, RTT::ExecutionEngine* engine);
-	    ~ThrusterTask();
+        ~ThrusterTask();
 
         bool configureHook();
         bool startHook();
@@ -28,7 +28,7 @@ namespace rock_gazebo {
         void stopHook();
         void cleanupHook();
 
-        void setGazeboModel(WorldPtr, ModelPtr);
+        void setGazeboModel(WorldPtr, ModelPtr, sdf::ElementPtr);
 
     private:
         ModelPtr model;
