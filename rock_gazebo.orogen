@@ -3,7 +3,7 @@ import_types_from "base"
 import_types_from "rock_gazeboTypes.hpp"
 
 using_library "gazebo"
-
+using_library "gazebo_thruster"
 
 # Representation of a gazebo World object
 task_context "WorldTask" do
@@ -38,6 +38,17 @@ task_context "ModelTask" do
     # Joints input/output ports
     input_port "joints_cmd", "/base/samples/Joints"
     output_port "joints_samples", "/base/samples/Joints"
+end
 
+task_context "ThrusterTask" do
+    needs_configuration
+
+    exception_states 'NO_TOPIC_CONNECTION'
+
+    # Thruster full name
+    attribute "name", "/std/string"
+
+    # Thruster input port
+    input_port "thrusters_cmd", "/base/samples/Joints"
 end
 
