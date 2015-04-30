@@ -95,10 +95,10 @@ void ThrusterTask::cleanupHook()
     node->Fini();
 }
 
-void ThrusterTask::setGazeboModel(WorldPtr _world,  ModelPtr _model)
+void ThrusterTask::setGazeboModel(WorldPtr _world,  ModelPtr _model, sdf::ElementPtr _plugin)
 {
     string name = "gazebo:" + _world->GetName() + ":" + _model->GetName() +
-            ":thruster_task";
+            ":" + _plugin->Get<std::string>("name");
     provides()->setName(name);
     _name.set(name);
 
