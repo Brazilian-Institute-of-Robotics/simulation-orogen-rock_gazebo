@@ -5,6 +5,7 @@
 
 #include "rock_gazebo/BaseTaskBase.hpp"
 #include <gazebo/physics/physics.hh>
+#include <base/Time.hpp>
 
 namespace rock_gazebo {
 
