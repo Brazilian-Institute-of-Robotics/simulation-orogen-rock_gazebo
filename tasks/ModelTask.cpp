@@ -117,6 +117,8 @@ void ModelTask::updateHook()
 void ModelTask::updateModelPose()
 {
     math::Pose model2world = model->GetWorldPose();
+    math::Vector3 model2world_angular_vel = model->GetWorldAngularVel();
+    math::Vector3 model2world_vel = model->GetWorldLinearVel();
 
     RigidBodyState rbs;
     rbs.invalidate();
@@ -126,6 +128,10 @@ void ModelTask::updateModelPose()
         model2world.pos.x,model2world.pos.y,model2world.pos.z);
     rbs.orientation = base::Quaterniond(
         model2world.rot.w,model2world.rot.x,model2world.rot.y,model2world.rot.z );
+    rbs.velocity = base::Vector3d(
+        model2world_vel.x, model2world_vel.y, model2world_vel.z);
+    rbs.angular_velocity = base::Vector3d(
+        model2world_angular_vel.x, model2world_angular_vel.y, model2world_angular_vel.z);
     _pose_samples.write(rbs);
 }
 
