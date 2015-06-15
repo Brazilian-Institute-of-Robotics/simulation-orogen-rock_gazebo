@@ -16,9 +16,17 @@ task_context "WorldTask" do
     output_port 'time', 'base/Time'
 end
 
+task_context "BaseTask" do
+    # Controls whether the components should use the simulation time (the
+    # default) or wall-clock time
+    property "use_sim_time", "/bool", true
+end
+
 # Representation of a gazebo Model object
 task_context "ModelTask" do
     needs_configuration
+
+    subclasses 'BaseTask'
 
     # The model full name
     attribute "name", '/std/string'
@@ -42,6 +50,8 @@ end
 
 task_context "ThrusterTask" do
     needs_configuration
+
+    subclasses 'BaseTask'
 
     exception_states 'NO_TOPIC_CONNECTION'
 

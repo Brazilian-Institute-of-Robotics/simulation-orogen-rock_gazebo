@@ -17,21 +17,19 @@ namespace rock_gazebo {
             typedef gazebo::physics::Joint_V Joint_V;
             typedef gazebo::physics::Link_V Link_V;
             typedef gazebo::physics::ModelPtr ModelPtr;
-            typedef gazebo::physics::WorldPtr WorldPtr;
             typedef gazebo::physics::JointPtr JointPtr;
             typedef gazebo::physics::LinkPtr LinkPtr;
 	        
         friend class ModelTaskBase;
         private:
             ModelPtr model;
-            WorldPtr world;
             sdf::ElementPtr sdf;
 
             Joint_V gazebo_joints;
 
             base::samples::Joints joints_in;
             void setupJoints();
-            void updateJoints();
+            void updateJoints(base::Time const& time);
 
             typedef base::samples::RigidBodyState RigidBodyState;
             typedef RTT::OutputPort<RigidBodyState> RBSOutPort;
@@ -49,8 +47,8 @@ namespace rock_gazebo {
             ExportedLinks exported_links;
 
             void setupLinks();
-            void updateLinks();
-            void updateModelPose();
+            void updateLinks(base::Time const& time);
+            void updateModelPose(base::Time const& time);
 
             std::string checkExportedLinkElements(std::string, std::string, std::string);
 

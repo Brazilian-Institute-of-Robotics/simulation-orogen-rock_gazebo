@@ -34,7 +34,7 @@ void ModelTask::setGazeboModel(WorldPtr _world,  ModelPtr _model)
     provides()->setName(name);
     _name.set(name);
 
-    world = _world;
+    BaseTask::setGazeboWorld(_world);
     model = _model;
 
     if (_model_frame.get().empty())
@@ -109,12 +109,14 @@ void ModelTask::setupLinks()
 
 void ModelTask::updateHook()
 {
-    updateModelPose();
-    updateJoints();
-    updateLinks();
+    base::Time time = getCurrentTime();
+
+    updateModelPose(time);
+    updateJoints(time);
+    updateLinks(time);
 }
 
-void ModelTask::updateModelPose()
+void ModelTask::updateModelPose(base::Time const& time)
 {
     math::Pose model2world = model->GetWorldPose();
     math::Vector3 model2world_angular_vel = model->GetWorldAngularVel();
@@ -122,6 +124,7 @@ void ModelTask::updateModelPose()
 
     RigidBodyState rbs;
     rbs.invalidate();
+    rbs.time = time;
     rbs.sourceFrame = _model_frame.get();
     rbs.targetFrame = _world_frame.get();
     rbs.position = base::Vector3d(
@@ -135,7 +138,7 @@ void ModelTask::updateModelPose()
     _pose_samples.write(rbs);
 }
 
-void ModelTask::updateJoints()
+void ModelTask::updateJoints(base::Time const& time)
 {
     // Read positions from Gazebo link
     vector<string> names;
@@ -146,7 +149,9 @@ void ModelTask::updateJoints()
         names.push_back( (*it)->GetScopedName() );
         positions.push_back( (*it)->GetAngle(0).Radian() );
     }
-    _joints_samples.write( base::samples::Joints::Positions(positions,names) );
+    base::samples::Joints joints = base::samples::Joints::Positions(positions,names);
+    joints.time = time;
+    _joints_samples.write( joints );
 
     // If we have commands, pass them on to gazebo
     if (_joints_cmd.readNewest( joints_in ) == RTT::NewData)
@@ -166,7 +171,7 @@ void ModelTask::updateJoints()
     }
 }
 
-void ModelTask::updateLinks()
+void ModelTask::updateLinks(base::Time const& time)
 {
     for(ExportedLinks::const_iterator it = exported_links.begin(); it != exported_links.end(); ++it)
     {
@@ -185,6 +190,7 @@ void ModelTask::updateLinks()
             relative_pose.pos.x,relative_pose.pos.y,relative_pose.pos.z);
         rbs.orientation = base::Quaterniond(
             relative_pose.rot.w,relative_pose.rot.x,relative_pose.rot.y,relative_pose.rot.z );
+        rbs.time = time;
 
         it->port->write(rbs);
     }
