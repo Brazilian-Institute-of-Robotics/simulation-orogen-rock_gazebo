@@ -14,7 +14,6 @@ namespace rock_gazebo {
 	friend class ThrusterTaskBase;
     public:
         typedef gazebo::physics::ModelPtr ModelPtr;
-        typedef gazebo::physics::WorldPtr WorldPtr;
         typedef gazebo_thruster::msgs::Thrusters ThrustersMSG;
 
         ThrusterTask(std::string const& name = "rock_gazebo::ThrusterTask");
@@ -28,10 +27,10 @@ namespace rock_gazebo {
         void stopHook();
         void cleanupHook();
 
-        void setGazeboModel(WorldPtr, ModelPtr, sdf::ElementPtr);
+        void setGazeboThruster( ModelPtr );
 
     private:
-        ModelPtr model;
+        std::string topicName;
         gazebo::transport::NodePtr node;
         gazebo::transport::PublisherPtr thrusterPublisher;
         base::samples::Joints jointsCMD;
