@@ -62,3 +62,15 @@ task_context "ThrusterTask" do
     input_port "thrusters_cmd", "/base/samples/Joints"
 end
 
+task_context "LaserScanTask" do
+    needs_configuration
+
+    subclasses 'BaseTask'
+
+    # Laser line full name
+    attribute "name", "/std/string"
+
+    # Laser line output port
+    output_port "laser_scan_cmd", "/base/samples/LaserScan"
+end
+
