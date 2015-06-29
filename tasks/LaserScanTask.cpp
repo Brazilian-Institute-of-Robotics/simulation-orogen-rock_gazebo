@@ -67,7 +67,7 @@ void LaserScanTask::cleanupHook()
     node->Fini();
 }
 
-void LaserScanTask::setGazeboModel( ModelPtr model, string sensorName )
+void LaserScanTask::setGazeboModel( ModelPtr model, string sensorName, string topicName )
 {
     string taskName = "gazebo:" + model->GetWorld()->GetName() + ":" + model->GetName() + ":" + sensorName;
     provides()->setName(taskName);
@@ -76,7 +76,7 @@ void LaserScanTask::setGazeboModel( ModelPtr model, string sensorName )
     BaseTask::setGazeboWorld( model->GetWorld() );
 
     // Set topic name to communicate with Gazebo
-    topicName = model->GetName() + "/flat_fish_body/" + sensorName + "/scan";
+    this->topicName = topicName;
 }
 
 

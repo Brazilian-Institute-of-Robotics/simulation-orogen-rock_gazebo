@@ -26,7 +26,7 @@ namespace rock_gazebo{
 
         typedef gazebo::physics::ModelPtr ModelPtr;
 
-        void setGazeboModel( ModelPtr model, std::string sensorName );
+        void setGazeboModel( ModelPtr model, std::string sensorName, std::string topicName);
         void readInput( ConstLaserScanStampedPtr &laserScanMSG );
 
     private:
