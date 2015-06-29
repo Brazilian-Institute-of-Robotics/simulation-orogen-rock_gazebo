@@ -93,7 +93,7 @@ void ThrusterTask::cleanupHook()
     node->Fini();
 }
 
-void ThrusterTask::setGazeboThruster( ModelPtr model )
+void ThrusterTask::setGazeboModel( ModelPtr model )
 {
     string taskName = "gazebo:" + model->GetWorld()->GetName() + ":" + model->GetName() + ":gazebo_thruster";
     provides()->setName(taskName);

@@ -26,7 +26,7 @@ namespace rock_gazebo{
         void stopHook();
         void cleanupHook();
 
-        void setGazeboLaserScan( ModelPtr model, std::string sensorName );
+        void setGazeboModel( ModelPtr model, std::string sensorName );
 
         typedef const boost::shared_ptr<const gazebo::msgs::LaserScanStamped> LaserScanStamped;
         void readInput(LaserScanStamped const& laserScanMSG);

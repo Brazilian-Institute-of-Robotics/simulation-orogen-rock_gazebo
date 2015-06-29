@@ -64,7 +64,7 @@ void LaserScanTask::cleanupHook()
     node->Fini();
 }
 
-void LaserScanTask::setGazeboLaserScan( ModelPtr model, string sensorName )
+void LaserScanTask::setGazeboModel( ModelPtr model, string sensorName )
 {
     string taskName = "gazebo:" + model->GetWorld()->GetName() + ":" + model->GetName() + ":" + sensorName;
     provides()->setName(taskName);
