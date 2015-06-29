@@ -13,8 +13,6 @@ namespace rock_gazebo{
     {
 	friend class LaserScanTaskBase;
     public:
-        typedef gazebo::physics::ModelPtr ModelPtr;
-
         LaserScanTask(std::string const& name = "rock_gazebo::LaserScanTask");
         LaserScanTask(std::string const& name, RTT::ExecutionEngine* engine);
     	~LaserScanTask();
@@ -26,14 +24,17 @@ namespace rock_gazebo{
         void stopHook();
         void cleanupHook();
 
-        void setGazeboModel( ModelPtr model, std::string sensorName );
+        typedef gazebo::physics::ModelPtr ModelPtr;
 
-        typedef const boost::shared_ptr<const gazebo::msgs::LaserScanStamped> LaserScanStamped;
-        void readInput(LaserScanStamped const& laserScanMSG);
+        void setGazeboModel( ModelPtr model, std::string sensorName );
+        void readInput( ConstLaserScanStampedPtr &laserScanMSG );
+
     private:
         std::string topicName;
         gazebo::transport::NodePtr node;
         gazebo::transport::SubscriberPtr laserScanSubscriber;
+
+        base::samples::LaserScan laserScanCMD;
     };
 }
 

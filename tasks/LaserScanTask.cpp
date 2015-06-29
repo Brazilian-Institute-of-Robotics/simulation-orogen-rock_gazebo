@@ -29,7 +29,7 @@ bool LaserScanTask::configureHook()
     // Initialize communication node and subscribe to gazebo topic
     node = transport::NodePtr( new transport::Node() );
     node->Init();
-    laserScanSubscriber = node->Subscribe("~/" + topicName,&LaserScanTask::readInput,this);
+    laserScanSubscriber = node->Subscribe("~/" + topicName, &LaserScanTask::readInput, this);
     gzmsg << "LaserScanTask: subscribing to gazebo topic ~/" + topicName << endl;
 
     return true;
@@ -45,6 +45,9 @@ bool LaserScanTask::startHook()
 void LaserScanTask::updateHook()
 {
     LaserScanTaskBase::updateHook();
+
+    laserScanCMD.time = getCurrentTime();
+    _laser_scan_cmd.write( laserScanCMD );
 }
 
 void LaserScanTask::errorHook()
@@ -70,21 +73,17 @@ void LaserScanTask::setGazeboModel( ModelPtr model, string sensorName )
     provides()->setName(taskName);
     _name.set(taskName);
 
+    BaseTask::setGazeboWorld( model->GetWorld() );
+
     // Set topic name to communicate with Gazebo
     topicName = model->GetName() + "/flat_fish_body/" + sensorName + "/scan";
 }
 
 
-void LaserScanTask::readInput( LaserScanStamped const& laserScanMSG )
+void LaserScanTask::readInput( ConstLaserScanStampedPtr & laserScanMSG )
 {
-    base::samples::LaserScan laserScanCMD;
-
     for(int i = 0; i < laserScanMSG->scan().ranges_size(); ++i)
         laserScanCMD.ranges.push_back( laserScanMSG->scan().ranges(i) );
-
-    if( laserScanMSG->has_time() )
-        laserScanCMD.time.microseconds = laserScanMSG->time().sec() * 1000000 +
-            laserScanMSG->time().nsec() / 1000;
 
     if( laserScanMSG->scan().has_angle_step() )
         laserScanCMD.angular_resolution = laserScanMSG->scan().angle_step();
@@ -97,8 +96,6 @@ void LaserScanTask::readInput( LaserScanStamped const& laserScanMSG )
 
     if( laserScanMSG->scan().has_angle_min() )
         laserScanCMD.start_angle = laserScanMSG->scan().angle_min();
-
-    _laser_scan_cmd.write( laserScanCMD );
 }
 
 
