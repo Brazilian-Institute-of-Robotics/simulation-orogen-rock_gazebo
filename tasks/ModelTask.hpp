@@ -43,7 +43,7 @@ namespace rock_gazebo {
                 ExportedLink()
                     : port(NULL) { }
             };
-            typedef std::vector<ExportedLink> ExportedLinks;
+            typedef std::map<std::string, ExportedLink> ExportedLinks;
             ExportedLinks exported_links;
 
             void setupLinks();
@@ -52,8 +52,10 @@ namespace rock_gazebo {
 
             std::string checkExportedLinkElements(std::string, std::string, std::string);
 
+            void releaseLinks();
+
         protected:
-		
+
         public:
             void setGazeboModel(WorldPtr, ModelPtr);
 
