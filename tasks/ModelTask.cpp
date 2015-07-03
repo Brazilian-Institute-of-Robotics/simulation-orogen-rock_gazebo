@@ -7,9 +7,10 @@
 
 #include "ModelTask.hpp"
 #include <gazebo/common/Exception.hh>
+
+using namespace std;
 using namespace gazebo;
 using namespace rock_gazebo;
-using namespace std;
 
 ModelTask::ModelTask(string const& name)
 	: ModelTaskBase(name)
