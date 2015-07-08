@@ -82,17 +82,19 @@ void LaserScanTask::setGazeboModel( ModelPtr model, string sensorName, string to
 
 void LaserScanTask::readInput( ConstLaserScanStampedPtr & laserScanMSG )
 {
+    laserScanCMD.ranges.clear();
+
     for(int i = 0; i < laserScanMSG->scan().ranges_size(); ++i)
-        laserScanCMD.ranges.push_back( laserScanMSG->scan().ranges(i) );
+        laserScanCMD.ranges.push_back( laserScanMSG->scan().ranges(i) * 1000);
 
     if( laserScanMSG->scan().has_angle_step() )
         laserScanCMD.angular_resolution = laserScanMSG->scan().angle_step();
 
     if( laserScanMSG->scan().has_range_min() )
-        laserScanCMD.minRange = laserScanMSG->scan().range_min();
+        laserScanCMD.minRange = laserScanMSG->scan().range_min() * 1000;
 
     if( laserScanMSG->scan().has_range_max() )
-        laserScanCMD.maxRange = laserScanMSG->scan().range_max();
+        laserScanCMD.maxRange = laserScanMSG->scan().range_max() * 1000;
 
     if( laserScanMSG->scan().has_angle_min() )
         laserScanCMD.start_angle = laserScanMSG->scan().angle_min();
