@@ -47,7 +47,7 @@ void LaserScanTask::updateHook()
     LaserScanTaskBase::updateHook();
 
     laserScanCMD.time = getCurrentTime();
-    _laser_scan_cmd.write( laserScanCMD );
+    _laser_scan_samples.write( laserScanCMD );
 }
 
 void LaserScanTask::errorHook()
