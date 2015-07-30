@@ -29,7 +29,7 @@ bool ThrusterTask::configureHook()
     node = transport::NodePtr( new transport::Node() );
     node->Init();
     thrusterPublisher = node->Advertise<ThrustersMSG>("~/" + topicName);
-    gzmsg <<"ThrusterTask: advertising to gazebo topic ~/" + topicName << endl;
+    gzmsg << "ThrusterTask: advertising to gazebo topic ~/" + topicName << endl;
     return true;
 }
 
@@ -63,6 +63,9 @@ void ThrusterTask::updateHook()
 
             if( jointState.isEffort() )
                 thruster->set_effort( jointState.effort );
+
+            if( jointState.isSpeed() )
+                thruster->set_speed( jointState.speed );
         }
 
         // Write in gazebo topic
