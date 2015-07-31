@@ -15,7 +15,7 @@ namespace rock_gazebo{
     public:
         LaserScanTask(std::string const& name = "rock_gazebo::LaserScanTask");
         LaserScanTask(std::string const& name, RTT::ExecutionEngine* engine);
-    	~LaserScanTask();
+        ~LaserScanTask();
 
         bool configureHook();
         bool startHook();
