@@ -49,8 +49,6 @@ void ThrusterTask::updateHook()
     // Read Rock input port and update the message
     if (_thrusters_cmd.readNewest( jointsCMD ) == RTT::NewData)
     {
-        gzmsg << "ThrusterTask: new sample" << endl;
-
         ThrustersMSG thrustersMSG;
         for(vector<string>::iterator jointName = jointsCMD.names.begin();
                 jointName != jointsCMD.names.end(); ++jointName)
