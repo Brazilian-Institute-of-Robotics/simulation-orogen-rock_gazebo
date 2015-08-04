@@ -29,7 +29,7 @@ bool ThrusterTask::configureHook()
     node = transport::NodePtr( new transport::Node() );
     node->Init();
     thrusterPublisher = node->Advertise<ThrustersMSG>("~/" + topicName);
-    gzmsg <<"ThrusterTask: advertising to gazebo topic ~/" + topicName << endl;
+    gzmsg << "ThrusterTask: advertising to gazebo topic ~/" + topicName << endl;
     return true;
 }
 
@@ -56,9 +56,6 @@ void ThrusterTask::updateHook()
             base::JointState jointState = jointsCMD.getElementByName(*jointName);
             gazebo_thruster::msgs::Thruster* thruster = thrustersMSG.add_thrusters();
             thruster->set_name( *jointName );
-            if( jointState.isRaw() )
-                thruster->set_raw( jointState.raw );
-
             if( jointState.isEffort() )
                 thruster->set_effort( jointState.effort );
         }
