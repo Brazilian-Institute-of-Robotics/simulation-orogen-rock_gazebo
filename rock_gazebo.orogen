@@ -71,6 +71,6 @@ task_context "LaserScanTask" do
     attribute "name", "/std/string"
 
     # Laser line output port
-    output_port "laser_scan_cmd", "/base/samples/LaserScan"
+    output_port "laser_scan_samples", "/base/samples/LaserScan"
 end
 
