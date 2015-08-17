@@ -46,6 +46,8 @@ task_context "ModelTask" do
     # Joints input/output ports
     input_port "joints_cmd", "/base/samples/Joints"
     output_port "joints_samples", "/base/samples/Joints"
+    # Link export
+    dynamic_output_port /.*/, '/base/samples/RigidBodyState'
 end
 
 task_context "ThrusterTask" do
