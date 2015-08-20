@@ -67,21 +67,23 @@ void ModelTask::setupLinks()
         ExportedLink exported_link;
 
         exported_link.source_link =
-            checkExportedLinkElements("source_link", it->source_link, "world");
+            checkExportedLinkElements("source_link", it->source_link, _world_frame.get());
         exported_link.target_link =
-            checkExportedLinkElements("target_link", it->target_link, "world");
+            checkExportedLinkElements("target_link", it->target_link, _world_frame.get());
         exported_link.source_frame =
             checkExportedLinkElements("source_frame", it->source_frame, exported_link.source_link);
         exported_link.target_frame =
             checkExportedLinkElements("target_frame", it->target_frame, exported_link.target_link);
 
-        exported_link.source_link_ptr = model->GetLink( it->source_link );
-        exported_link.target_link_ptr = model->GetLink( it->target_link );
+        if (it->source_link != _world_frame.get())
+            exported_link.source_link_ptr = model->GetLink( it->source_link );
+        if (it->target_link != _world_frame.get())
+            exported_link.target_link_ptr = model->GetLink( it->target_link );
         exported_link.port_name = it->port_name;
 
-        if (exported_link.source_link != "world" && !exported_link.source_link_ptr)
+        if (exported_link.source_link != _world_frame.get() && !exported_link.source_link_ptr)
         { gzthrow("ModelTask: cannot find exported source link " << it->source_link << " in model"); }
-        else if (exported_link.target_link != "world" && !exported_link.target_link_ptr)
+        else if (exported_link.target_link != _world_frame.get() && !exported_link.target_link_ptr)
         { gzthrow("ModelTask: cannot find exported target link " << it->target_link << " in model"); }
         else if (it->port_name.empty())
         { gzthrow("ModelTask: no port name given in link export"); }
