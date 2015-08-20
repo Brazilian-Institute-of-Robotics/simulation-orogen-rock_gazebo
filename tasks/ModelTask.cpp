@@ -176,21 +176,21 @@ void ModelTask::updateLinks(base::Time const& time)
 {
     for(ExportedLinks::const_iterator it = exported_links.begin(); it != exported_links.end(); ++it)
     {
-        math::Pose source_pose = math::Pose::Zero;
+        math::Pose source2world = math::Pose::Zero;
         if (it->second.source_link_ptr)
-            source_pose = it->second.source_link_ptr->GetWorldPose();
-        math::Pose target_pose = math::Pose::Zero;
+            source2world = it->second.source_link_ptr->GetWorldPose();
+        math::Pose target2world = math::Pose::Zero;
         if (it->second.target_link_ptr)
-            target_pose = it->second.target_link_ptr->GetWorldPose();
-        math::Pose relative_pose( math::Pose(source_pose - target_pose) );
+            target2world = it->second.target_link_ptr->GetWorldPose();
+        math::Pose source2target( math::Pose(source2world - target2world) );
 
         RigidBodyState rbs;
         rbs.sourceFrame = it->second.source_frame;
         rbs.targetFrame = it->second.target_frame;
         rbs.position = base::Vector3d(
-            relative_pose.pos.x,relative_pose.pos.y,relative_pose.pos.z);
+            source2target.pos.x,source2target.pos.y,source2target.pos.z);
         rbs.orientation = base::Quaterniond(
-            relative_pose.rot.w,relative_pose.rot.x,relative_pose.rot.y,relative_pose.rot.z );
+            source2target.rot.w,source2target.rot.x,source2target.rot.y,source2target.rot.z );
         rbs.time = time;
 
         rbs.time = base::Time::now();
