@@ -224,6 +224,7 @@ void ModelTask::releaseLinks()
 {
     for(ExportedLinks::iterator it = exported_links.begin(); it != exported_links.end(); ++it) {
         if (it->second.port != NULL) {
+            ports()->removePort(it->second.port->getName());
             delete it->second.port;
             it->second.port = NULL;
         }
