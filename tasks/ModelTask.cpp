@@ -67,21 +67,23 @@ void ModelTask::setupLinks()
         ExportedLink exported_link;
 
         exported_link.source_link =
-            checkExportedLinkElements("source_link", it->source_link, "world");
+            checkExportedLinkElements("source_link", it->source_link, _world_frame.get());
         exported_link.target_link =
-            checkExportedLinkElements("target_link", it->target_link, "world");
+            checkExportedLinkElements("target_link", it->target_link, _world_frame.get());
         exported_link.source_frame =
             checkExportedLinkElements("source_frame", it->source_frame, exported_link.source_link);
         exported_link.target_frame =
             checkExportedLinkElements("target_frame", it->target_frame, exported_link.target_link);
 
-        exported_link.source_link_ptr = model->GetLink( it->source_link );
-        exported_link.target_link_ptr = model->GetLink( it->target_link );
+        if (it->source_link != _world_frame.get())
+            exported_link.source_link_ptr = model->GetLink( it->source_link );
+        if (it->target_link != _world_frame.get())
+            exported_link.target_link_ptr = model->GetLink( it->target_link );
         exported_link.port_name = it->port_name;
 
-        if (exported_link.source_link != "world" && !exported_link.source_link_ptr)
+        if (exported_link.source_link != _world_frame.get() && !exported_link.source_link_ptr)
         { gzthrow("ModelTask: cannot find exported source link " << it->source_link << " in model"); }
-        else if (exported_link.target_link != "world" && !exported_link.target_link_ptr)
+        else if (exported_link.target_link != _world_frame.get() && !exported_link.target_link_ptr)
         { gzthrow("ModelTask: cannot find exported target link " << it->target_link << " in model"); }
         else if (it->port_name.empty())
         { gzthrow("ModelTask: no port name given in link export"); }
@@ -174,21 +176,21 @@ void ModelTask::updateLinks(base::Time const& time)
 {
     for(ExportedLinks::const_iterator it = exported_links.begin(); it != exported_links.end(); ++it)
     {
-        math::Pose source_pose = math::Pose::Zero;
+        math::Pose source2world = math::Pose::Zero;
         if (it->second.source_link_ptr)
-            source_pose = it->second.source_link_ptr->GetWorldPose();
-        math::Pose target_pose = math::Pose::Zero;
+            source2world = it->second.source_link_ptr->GetWorldPose();
+        math::Pose target2world = math::Pose::Zero;
         if (it->second.target_link_ptr)
-            target_pose = it->second.target_link_ptr->GetWorldPose();
-        math::Pose relative_pose( math::Pose(source_pose - target_pose) );
+            target2world = it->second.target_link_ptr->GetWorldPose();
+        math::Pose source2target( math::Pose(source2world - target2world) );
 
         RigidBodyState rbs;
         rbs.sourceFrame = it->second.source_frame;
         rbs.targetFrame = it->second.target_frame;
         rbs.position = base::Vector3d(
-            relative_pose.pos.x,relative_pose.pos.y,relative_pose.pos.z);
+            source2target.pos.x,source2target.pos.y,source2target.pos.z);
         rbs.orientation = base::Quaterniond(
-            relative_pose.rot.w,relative_pose.rot.x,relative_pose.rot.y,relative_pose.rot.z );
+            source2target.rot.w,source2target.rot.x,source2target.rot.y,source2target.rot.z );
         rbs.time = time;
 
         rbs.time = base::Time::now();
