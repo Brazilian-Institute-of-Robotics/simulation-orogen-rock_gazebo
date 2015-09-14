@@ -15,6 +15,9 @@ using namespace rock_gazebo;
 ModelTask::ModelTask(string const& name)
 	: ModelTaskBase(name)
 {
+    _cov_position.set(base::Matrix3d::Ones() * base::unset<double>());
+    _cov_orientation.set(base::Matrix3d::Ones() * base::unset<double>());
+    _cov_velocity.set(base::Matrix3d::Ones() * base::unset<double>());
 }
 
 ModelTask::ModelTask(string const& name, RTT::ExecutionEngine* engine)
@@ -130,10 +133,13 @@ void ModelTask::updateModelPose(base::Time const& time)
     rbs.targetFrame = _world_frame.get();
     rbs.position = base::Vector3d(
         model2world.pos.x,model2world.pos.y,model2world.pos.z);
+    rbs.cov_position = _cov_position.get();
     rbs.orientation = base::Quaterniond(
         model2world.rot.w,model2world.rot.x,model2world.rot.y,model2world.rot.z );
+    rbs.cov_orientation = _cov_orientation.get();
     rbs.velocity = base::Vector3d(
         model2world_vel.x, model2world_vel.y, model2world_vel.z);
+    rbs.cov_velocity = _cov_velocity.get();
     rbs.angular_velocity = base::Vector3d(
         model2world_angular_vel.x, model2world_angular_vel.y, model2world_angular_vel.z);
     _pose_samples.write(rbs);
