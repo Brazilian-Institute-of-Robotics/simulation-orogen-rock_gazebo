@@ -39,9 +39,14 @@ task_context "ModelTask" do
     property 'world_frame', '/std/string'
     # The pose of the model w.r.t. the world frame
     output_port 'pose_samples', '/base/samples/RigidBodyState'
+    # The covariance matrix to be used as position covariance. Default is unset (NaN)
+    property 'cov_position', '/base/Matrix3d'
+    # The covariance matrix to be used as orientation covariance. Default is unset (NaN)
+    property 'cov_orientation', '/base/Matrix3d'
+    # The covariance matrix to be used as velocity covariance. Default is unset (NaN)
+    property 'cov_velocity', '/base/Matrix3d'
 
     property "exported_links", "std/vector<rock_gazebo/LinkExport>"
-
 
     # Joints input/output ports
     input_port "joints_cmd", "/base/samples/Joints"
