@@ -19,7 +19,6 @@ ModelTask::ModelTask(string const& name)
     _cov_orientation.set(base::Matrix3d::Ones() * base::unset<double>());
     _cov_velocity.set(base::Matrix3d::Ones() * base::unset<double>());
 }
-
 ModelTask::ModelTask(string const& name, RTT::ExecutionEngine* engine)
 	: ModelTaskBase(name, engine)
 {
@@ -163,9 +162,14 @@ void ModelTask::updateJoints(base::Time const& time)
     // If we have commands, pass them on to gazebo
     if (_joints_cmd.readNewest( joints_in ) == RTT::NewData)
     {
+	const std::vector<std::string> &names= joints_in.names;
+	std::vector<std::string>::const_iterator result;
         for(Joint_V::iterator it = gazebo_joints.begin(); it != gazebo_joints.end(); ++it )
         {
-            base::JointState j_cmd(joints_in[(*it)->GetScopedName()]);
+            result = std::find(names.begin(),names.end(),(*it)->GetScopedName());
+	    if(result == names.end())
+                continue;
+            base::JointState j_cmd(joints_in[result-names.begin()]);
 
             // Apply effort to joint
             if( j_cmd.isEffort() )
