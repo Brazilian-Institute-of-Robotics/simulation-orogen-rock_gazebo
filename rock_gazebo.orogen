@@ -81,3 +81,33 @@ task_context "LaserScanTask" do
     output_port "laser_scan_samples", "/base/samples/LaserScan"
 end
 
+task_context "CameraTask" do
+    needs_configuration
+
+    subclasses 'BaseTask'
+
+    # Camera full name
+    attribute "name", "/std/string"
+
+    # Camera output port
+    output_port 'frame', ro_ptr('base::samples::frame::Frame')
+end
+
+task_context "ImuTask" do
+    needs_configuration
+
+    subclasses 'BaseTask'
+
+    # IMU full name
+    attribute "name", "/std/string"
+
+    # The name of the frame attached to the IMU'
+    property('imu_frame', '/std/string', 'imu')
+
+    # The name of the world frame'
+    property('world_frame', '/std/string', 'imu_world')
+
+    # Provides orientation samples reported by the IMU sensor.'
+    output_port('orientation_samples', '/base/samples/RigidBodyState')
+end
+
