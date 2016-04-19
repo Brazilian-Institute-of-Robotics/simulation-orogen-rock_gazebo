@@ -49,9 +49,16 @@ void ModelTask::setupJoints()
     // Get all joints from a model and set Rock Input/Output Ports
     for(Joint_V::iterator joint = gazebo_joints.begin(); joint != gazebo_joints.end(); ++joint)
     {
+#if GAZEBO_MAJOR_VERSION >= 6
+        if((*joint)->HasType(physics::Base::FIXED_JOINT))
+        {
+            gzmsg << "ModelTask: ignore fixed joint: " << world->GetName() + "/" + model->GetName() +
+                "/" + (*joint)->GetName() << endl;
+            continue;
+        }
+#endif
         gzmsg << "ModelTask: found joint: " << world->GetName() + "/" + model->GetName() +
                 "/" + (*joint)->GetName() << endl;
-
         joints_in.names.push_back( (*joint)->GetName() );
         joints_in.elements.push_back( base::JointState::Effort(0.0) );
     }
@@ -151,6 +158,12 @@ void ModelTask::updateJoints(base::Time const& time)
     vector<double> positions;
     for(Joint_V::iterator it = gazebo_joints.begin(); it != gazebo_joints.end(); ++it )
     {
+#if GAZEBO_MAJOR_VERSION >= 6
+        // Do not export fixed joints
+        if((*it)->HasType(physics::Base::FIXED_JOINT))
+            continue;
+#endif
+
         // Read joint angle from gazebo link
         names.push_back( (*it)->GetScopedName() );
         positions.push_back( (*it)->GetAngle(0).Radian() );
@@ -166,12 +179,19 @@ void ModelTask::updateJoints(base::Time const& time)
 	std::vector<std::string>::const_iterator result;
         for(Joint_V::iterator it = gazebo_joints.begin(); it != gazebo_joints.end(); ++it )
         {
+#if GAZEBO_MAJOR_VERSION >= 6
+            // Do not set fixed joints
+            if((*it)->HasType(physics::Base::FIXED_JOINT))
+                continue;
+#endif
+
+            // Do not set joints which are not part of the command
             result = std::find(names.begin(),names.end(),(*it)->GetScopedName());
 	    if(result == names.end())
                 continue;
-            base::JointState j_cmd(joints_in[result-names.begin()]);
 
             // Apply effort to joint
+            base::JointState j_cmd(joints_in[result-names.begin()]);
             if( j_cmd.isEffort() )
                 (*it)->SetForce(0, j_cmd.effort );
             else if( j_cmd.isPosition() )
