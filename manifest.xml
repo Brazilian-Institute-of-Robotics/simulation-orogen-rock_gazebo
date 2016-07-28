@@ -7,6 +7,8 @@
   <url>http://</url>
   <logo>http://</logo>
   <depend package="base/cmake" />
+  <depend package="base/types"/>
+  <depend package="control/orogen/auv_control"/>
   <depend package="base/orogen/types" />
   <depend package="simulation/gazebo" />
   <depend package="simulation/gazebo_thruster" />

@@ -1,7 +1,10 @@
 name "rock_gazebo"
+
 import_types_from "base"
 import_types_from "rock_gazeboTypes.hpp"
+import_types_from "auv_control/6dControl.hpp"
 
+using_task_library "auv_control"
 using_library "gazebo"
 using_library "gazebo_thruster"
 
@@ -62,11 +65,16 @@ task_context "ThrusterTask" do
 
     exception_states 'NO_TOPIC_CONNECTION'
 
+    # Compute the resultant forces and torques on the model's center of gravity, in body's frame.
+    property 'compute_generated_efforts', 'bool', true
+
     # Thruster full name
     attribute "name", "/std/string"
 
     # Thruster input port
     input_port "thrusters_cmd", "/base/samples/Joints"
+
+    output_port "body_efforts", "/base/LinearAngular6DCommand"
 end
 
 task_context "LaserScanTask" do
@@ -110,4 +118,3 @@ task_context "ImuTask" do
     # Provides orientation samples reported by the IMU sensor.'
     output_port('orientation_samples', '/base/samples/RigidBodyState')
 end
-
