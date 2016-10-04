@@ -48,6 +48,16 @@ task_context "ModelTask" do
 
     property "exported_links", "std/vector<rock_gazebo/LinkExport>"
 
+    # The efforts applied in the main link
+    output_port 'efforts', '/base/commands/LinearAngular6DCommand'
+    # The pose of the main link
+    output_port 'pose_flat_fish', '/base/samples/RigidBodyState'
+    # The pose of the main link
+    output_port 'accel_linear', '/base/samples/RigidBodyAcceleration'
+    output_port 'accel_angular', '/base/samples/RigidBodyAcceleration'
+
+
+
     # Joints input/output ports
     input_port "joints_cmd", "/base/samples/Joints"
     output_port "joints_samples", "/base/samples/Joints"
@@ -110,4 +120,3 @@ task_context "ImuTask" do
     # Provides orientation samples reported by the IMU sensor.'
     output_port('orientation_samples', '/base/samples/RigidBodyState')
 end
-

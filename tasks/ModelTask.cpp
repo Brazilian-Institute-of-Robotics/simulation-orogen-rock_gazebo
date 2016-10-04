@@ -1,9 +1,9 @@
 /* Generated from orogen/lib/orogen/templates/tasks/Task.cpp */
 //======================================================================================
-// Brazilian Institute of Robotics 
+// Brazilian Institute of Robotics
 // Authors: Thomio Watanabe
 // Date: December 2014
-//====================================================================================== 
+//======================================================================================
 
 #include "ModelTask.hpp"
 #include <gazebo/common/Exception.hh>
@@ -42,7 +42,7 @@ void ModelTask::setGazeboModel(WorldPtr _world,  ModelPtr _model)
         _model_frame.set(_model->GetName());
     if (_world_frame.get().empty())
         _world_frame.set(_world->GetName());
-} 
+}
 
 void ModelTask::setupJoints()
 {
@@ -149,6 +149,44 @@ void ModelTask::updateModelPose(base::Time const& time)
     rbs.angular_velocity = base::Vector3d(
         model2world_angular_vel.x, model2world_angular_vel.y, model2world_angular_vel.z);
     _pose_samples.write(rbs);
+
+    base::LinearAngular6DCommand efforts;
+    math::Vector3 body_force = model->GetLink("flat_fish_body")->GetRelativeForce();
+    math::Vector3 body_torque = model->GetLink("flat_fish_body")->GetRelativeTorque();
+    efforts.linear = base::Vector3d(body_force.x, body_force.y, body_force.z);
+    efforts.angular = base::Vector3d(body_torque.x, body_torque.y, body_torque.z);
+    efforts.time = rbs.time;
+    _efforts.write(efforts);
+
+    double dt = world->GetPhysicsEngine()->GetMaxStepSize();
+
+    math::Pose ff2world = model->GetLink("flat_fish_body")->GetWorldPose();
+
+    ff2world_vel += dt * model->GetLink("flat_fish_body")->GetWorldLinearAccel();
+    ff2world_angular_vel += dt * model->GetLink("flat_fish_body")->GetWorldAngularAccel();
+
+    rbs.sourceFrame = _model_frame.get();
+    rbs.targetFrame = _world_frame.get();
+    rbs.position = base::Vector3d(
+        model2world.pos.x,model2world.pos.y,model2world.pos.z);
+    rbs.orientation = base::Quaterniond(
+        model2world.rot.w,model2world.rot.x,model2world.rot.y,model2world.rot.z );
+    rbs.velocity = base::Vector3d(
+        ff2world_vel.x, ff2world_vel.y, ff2world_vel.z);
+    rbs.angular_velocity = base::Vector3d(
+        ff2world_angular_vel.x, ff2world_angular_vel.y, ff2world_angular_vel.z);
+    _pose_flat_fish.write(rbs);
+
+    base::samples::RigidBodyAcceleration accel;
+    accel.time = rbs.time;
+    math::Vector3 body_lin_accel = model->GetLink("flat_fish_body")->GetRelativeLinearAccel();
+    math::Vector3 body_ang_accel = model->GetLink("flat_fish_body")->GetRelativeAngularAccel();
+    accel.acceleration = base::Vector3d(body_lin_accel.x, body_lin_accel.y, body_lin_accel.z);
+    _accel_linear.write(accel);
+    accel.acceleration = base::Vector3d(body_ang_accel.x, body_ang_accel.y, body_ang_accel.z);
+    _accel_angular.write(accel);
+
+
 }
 
 void ModelTask::updateJoints(base::Time const& time)
@@ -241,6 +279,9 @@ bool ModelTask::configureHook()
     setupLinks();
     setupJoints();
 
+    ff2world_angular_vel = math::Vector3(0,0,0);
+    ff2world_vel = math::Vector3(0,0,0);
+
     return true;
 }
 
@@ -275,4 +316,3 @@ string ModelTask::checkExportedLinkElements(string element_name, string test, st
         return test;
     }
 }
-
