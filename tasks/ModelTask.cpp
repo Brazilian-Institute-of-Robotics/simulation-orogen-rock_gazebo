@@ -158,12 +158,10 @@ void ModelTask::updateModelPose(base::Time const& time)
     efforts.time = rbs.time;
     _efforts.write(efforts);
 
-    double dt = world->GetPhysicsEngine()->GetMaxStepSize();
-
     math::Pose ff2world = model->GetLink("flat_fish_body")->GetWorldPose();
 
-    ff2world_vel += dt * model->GetLink("flat_fish_body")->GetWorldLinearAccel();
-    ff2world_angular_vel += dt * model->GetLink("flat_fish_body")->GetWorldAngularAccel();
+    ff2world_vel = model->GetLink("flat_fish_body")->GetRelativeLinearVel();
+    ff2world_angular_vel = model->GetLink("flat_fish_body")->GetRelativeAngularVel();
 
     rbs.sourceFrame = _model_frame.get();
     rbs.targetFrame = _world_frame.get();
