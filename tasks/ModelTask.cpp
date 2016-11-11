@@ -129,7 +129,7 @@ void ModelTask::updateHook()
 void ModelTask::updateModelPose(base::Time const& time)
 {
     math::Pose model2world = model->GetWorldPose();
-    math::Vector3 model2world_angular_vel = model->GetWorldAngularVel();
+    math::Vector3 model2world_angular_vel = model->GetRelativeAngularVel();
     math::Vector3 model2world_vel = model->GetWorldLinearVel();
 
     RigidBodyState rbs;
