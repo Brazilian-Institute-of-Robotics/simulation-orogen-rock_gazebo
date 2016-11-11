@@ -121,9 +121,24 @@ void ModelTask::updateHook()
 {
     base::Time time = getCurrentTime();
 
+    base::samples::RigidBodyState modelPose;
+    if (_model_pose.read(modelPose) == RTT::NewData)
+        warpModel(modelPose);
+
     updateModelPose(time);
     updateJoints(time);
     updateLinks(time);
+}
+
+void ModelTask::warpModel(base::samples::RigidBodyState const& modelPose)
+{
+    Eigen::Vector3d v(modelPose.position);
+    math::Vector3 model2world_v(v.x(), v.y(), v.z());
+    Eigen::Quaterniond q(modelPose.orientation);
+    math::Quaternion model2world_q(q.w(), q.x(), q.y(), q.z());
+    math::Pose model2world;
+    model2world.Set(model2world_v, model2world_q);
+    model->SetWorldPose(model2world);
 }
 
 void ModelTask::updateModelPose(base::Time const& time)
