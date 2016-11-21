@@ -67,6 +67,8 @@ task_context "ThrusterTask" do
 
     # Thruster input port
     input_port "thrusters_cmd", "/base/samples/Joints"
+    # Thruster feedback port
+    output_port "thrusters_cmd_out", "/base/samples/Joints"
 end
 
 task_context "LaserScanTask" do
