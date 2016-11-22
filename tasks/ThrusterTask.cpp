@@ -68,6 +68,8 @@ void ThrusterTask::updateHook()
             gzmsg << "ThrusterTask: publisher has no connections. Going into exception" << endl;
             exception(NO_TOPIC_CONNECTION);
         }
+        jointsCMD.time = base::Time::now();
+        _joint_samples.write( jointsCMD );
     }
 }
 
