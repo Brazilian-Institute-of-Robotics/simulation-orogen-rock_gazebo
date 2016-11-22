@@ -47,6 +47,7 @@ namespace rock_gazebo {
             ExportedLinks exported_links;
 
             void setupLinks();
+            void warpModel(base::samples::RigidBodyState const& modelPose);
             void updateLinks(base::Time const& time);
             void updateModelPose(base::Time const& time);
 
