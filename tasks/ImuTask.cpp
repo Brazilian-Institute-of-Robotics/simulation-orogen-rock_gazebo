@@ -53,8 +53,10 @@ void ImuTask::updateHook()
     {
         imu_reading.sourceFrame = _imu_frame.value();
         imu_reading.targetFrame = _world_frame.value();
+        imu_reading.time = getCurrentTime();
         _orientation_samples.write(imu_reading);
         imu_reading.invalidate();
+        imu_samples.time = getCurrentTime();
         _imu_samples.write(imu_samples);
     }
 }
