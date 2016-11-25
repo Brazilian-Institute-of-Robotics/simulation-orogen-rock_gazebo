@@ -114,5 +114,8 @@ task_context "ImuTask" do
 
     # Provides orientation samples reported by the IMU sensor.'
     output_port('orientation_samples', '/base/samples/RigidBodyState')
+
+    # IMU samples containing linear acceleration, orientation and angular velocity
+    output_port('imu_samples', '/base/samples/IMUSensors')
 end
 

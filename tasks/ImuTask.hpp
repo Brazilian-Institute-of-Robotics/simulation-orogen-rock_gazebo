@@ -6,6 +6,7 @@
 #include <gazebo/physics/physics.hh>
 #include <gazebo/transport/transport.hh>
 #include <gazebo/msgs/imu.pb.h>
+#include <base/samples/IMUSensors.hpp>
 
 #include "rock_gazebo/ImuTaskBase.hpp"
 
@@ -117,6 +118,7 @@ namespace rock_gazebo{
         gazebo::transport::NodePtr node;
         gazebo::transport::SubscriberPtr imu_subscriber;
         base::samples::RigidBodyState imu_reading;
+        base::samples::IMUSensors imu_samples;
     };
 }
 
