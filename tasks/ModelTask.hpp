@@ -39,6 +39,7 @@ namespace rock_gazebo {
                 LinkPtr source_link_ptr;
                 LinkPtr target_link_ptr;
                 RBSOutPort* port;
+                base::Time last_update;
 
                 ExportedLink()
                     : port(NULL) { }
@@ -60,6 +61,7 @@ namespace rock_gazebo {
         public:
             void setGazeboModel(WorldPtr, ModelPtr);
 
+            bool startHook();
             void updateHook();
             bool configureHook();
             void cleanupHook();

@@ -89,6 +89,7 @@ void ModelTask::setupLinks()
         if (it->target_link != _world_frame.get())
             exported_link.target_link_ptr = model->GetLink( it->target_link );
         exported_link.port_name = it->port_name;
+        exported_link.port_period = it->port_period;
 
         if (exported_link.source_link != _world_frame.get() && !exported_link.source_link_ptr)
         { gzthrow("ModelTask: cannot find exported source link " << it->source_link << " in model"); }
@@ -109,7 +110,7 @@ void ModelTask::setupLinks()
         // Create the ports dynamicaly
         gzmsg << "ModelTask: exporting link "
             << world->GetName() + "/" + model->GetName() + "/" + it->second.source_link << "2" << it->second.target_link
-            << " through port " << it->first
+            << " through port " << it->first << " updated every " << it->second.port_period.toSeconds() << " seconds."
             << endl;
 
         it->second.port = new RBSOutPort( it->first );
@@ -117,6 +118,18 @@ void ModelTask::setupLinks()
     }
 }
 
+bool ModelTask::startHook()
+{
+    if (! ModelTaskBase::startHook())
+        return false;
+
+    for(ExportedLinks::iterator it = exported_links.begin(); it != exported_links.end(); ++it)
+    {
+        it->second.last_update.fromSeconds(0);
+    }
+
+    return true;
+}
 void ModelTask::updateHook()
 {
     base::Time time = getCurrentTime();
@@ -219,8 +232,16 @@ void ModelTask::updateJoints(base::Time const& time)
 
 void ModelTask::updateLinks(base::Time const& time)
 {
-    for(ExportedLinks::const_iterator it = exported_links.begin(); it != exported_links.end(); ++it)
+    for(ExportedLinks::iterator it = exported_links.begin(); it != exported_links.end(); ++it)
     {
+        //do not update the link if the last port writing happened
+        //in less then link_period. 
+        if (!(it->second.last_update.isNull()))
+        {
+            if ((time - it->second.last_update) <= it->second.port_period)
+                return;
+        }
+
         math::Pose source2world = math::Pose::Zero;
         if (it->second.source_link_ptr)
             source2world = it->second.source_link_ptr->GetWorldPose();
@@ -237,9 +258,8 @@ void ModelTask::updateLinks(base::Time const& time)
         rbs.orientation = base::Quaterniond(
             source2target.rot.w,source2target.rot.x,source2target.rot.y,source2target.rot.z );
         rbs.time = time;
-
-        rbs.time = base::Time::now();
         it->second.port->write(rbs);
+        it->second.last_update = time;
     }
 }
 

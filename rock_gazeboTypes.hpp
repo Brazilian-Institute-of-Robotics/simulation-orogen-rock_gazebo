@@ -2,6 +2,7 @@
 #define rock_gazebo_TYPES_HPP
 
 #include <iostream>
+#include "base/Time.hpp"
 
 namespace rock_gazebo
 {
@@ -16,6 +17,8 @@ namespace rock_gazebo
         std::string source_link;
         // The target gazebo link, leave empty for "world"
         std::string target_link;
+        // The period of update the output port
+        base::Time port_period;
     };
 }
 
