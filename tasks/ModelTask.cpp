@@ -244,12 +244,12 @@ void ModelTask::updateLinks(base::Time const& time)
 
         math::Pose source2world = math::Pose::Zero;
         math::Vector3 sourceInWorld_linear_vel  = math::Vector3::Zero;
-        math::Vector3 sourceInWorld_angular_vel = math::Vector3::Zero;
+        math::Vector3 source_angular_vel;
         if (it->second.source_link_ptr)
         {
             source2world = it->second.source_link_ptr->GetWorldPose();
             sourceInWorld_linear_vel  = it->second.source_link_ptr->GetWorldLinearVel();
-            sourceInWorld_angular_vel = it->second.source_link_ptr->GetWorldAngularVel();
+            source_angular_vel        = it->second.source_link_ptr->GetRelativeAngularVel();
         }
 
         math::Pose target2world = math::Pose::Zero;
@@ -257,7 +257,6 @@ void ModelTask::updateLinks(base::Time const& time)
             target2world = it->second.target_link_ptr->GetWorldPose();
 
         math::Pose source2target( math::Pose(source2world - target2world) );
-        math::Vector3 sourceInTarget_angular_vel(target2world.rot.RotateVectorReverse(sourceInWorld_angular_vel));
         math::Vector3 sourceInTarget_linear_vel (target2world.rot.RotateVectorReverse(sourceInWorld_linear_vel));
 
         RigidBodyState rbs;
@@ -273,7 +272,7 @@ void ModelTask::updateLinks(base::Time const& time)
             sourceInTarget_linear_vel.x,sourceInTarget_linear_vel.y,sourceInTarget_linear_vel.z);
         rbs.cov_velocity = _cov_velocity;
         rbs.angular_velocity = base::Vector3d(
-            sourceInTarget_angular_vel.x,sourceInTarget_angular_vel.y,sourceInTarget_angular_vel.z);
+            source_angular_vel.x,source_angular_vel.y,source_angular_vel.z);
         rbs.time = time;
         it->second.port->write(rbs);
         it->second.last_update = time;
