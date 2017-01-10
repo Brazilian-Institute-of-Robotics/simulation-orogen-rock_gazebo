@@ -1,6 +1,7 @@
 name "rock_gazebo"
 import_types_from "base"
 import_types_from "rock_gazeboTypes.hpp"
+import_types_from "gps_base"
 
 using_library "gazebo"
 using_library "gazebo_thruster"
@@ -112,5 +113,30 @@ task_context "ImuTask" do
 
     # IMU samples containing linear acceleration, orientation and angular velocity
     output_port('imu_samples', '/base/samples/IMUSensors')
+end
+
+task_context "GPSTask" do
+    subclasses 'SensorTask'
+
+    # The name of the frame attached to the GPS'
+    property('gps_frame', '/std/string', 'gps')
+
+    # The name of the world frame'
+    property('world_frame', '/std/string', 'nwu')
+
+    # The raw GPS position
+    output_port "gps_solution", "gps_base/Solution"
+
+    # Computed position in m, in the UTM coordinate provided and local to the origin
+    output_port('position_samples', '/base/samples/RigidBodyState')
+
+    # UTM zone for conversion of WGS84 to UTM
+    property("utm_zone", "int", 32)
+
+    # UTM north for conversion of WGS84 to UTM
+    property("utm_north", "bool", true)
+
+    # Origin in UTM coordinates, that is used for position readings.
+    property("origin", "/base/Position")
 end
 
