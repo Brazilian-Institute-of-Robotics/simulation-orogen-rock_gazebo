@@ -76,31 +76,30 @@ task_context "ThrusterTask" do
     output_port "joint_samples", "/base/samples/Joints"
 end
 
-task_context "LaserScanTask" do
-    subclasses 'BaseTask'
+task_context "SensorTask" do
+    subclasses "BaseTask"
+    abstract
 
-    # Laser line full name
+    # The sensor's full name
     attribute "name", "/std/string"
+end
+
+task_context "LaserScanTask" do
+    subclasses 'SensorTask'
 
     # Laser line output port
     output_port "laser_scan_samples", "/base/samples/LaserScan"
 end
 
 task_context "CameraTask" do
-    subclasses 'BaseTask'
-
-    # Camera full name
-    attribute "name", "/std/string"
+    subclasses 'SensorTask'
 
     # Camera output port
     output_port 'frame', ro_ptr('base::samples::frame::Frame')
 end
 
 task_context "ImuTask" do
-    subclasses 'BaseTask'
-
-    # IMU full name
-    attribute "name", "/std/string"
+    subclasses 'SensorTask'
 
     # The name of the frame attached to the IMU'
     property('imu_frame', '/std/string', 'imu')

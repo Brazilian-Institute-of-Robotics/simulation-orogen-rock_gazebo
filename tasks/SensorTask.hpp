@@ -1,39 +1,51 @@
 /* Generated from orogen/lib/orogen/templates/tasks/Task.hpp */
 
-#ifndef ROCK_GAZEBO_CAMERATASK_TASK_HPP
-#define ROCK_GAZEBO_CAMERATASK_TASK_HPP
+#ifndef ROCK_GAZEBO_SENSORTASK_TASK_HPP
+#define ROCK_GAZEBO_SENSORTASK_TASK_HPP
 
-#include <gazebo/physics/physics.hh>
-#include <gazebo/transport/transport.hh>
-#include <gazebo/msgs/camerasensor.pb.h>
-
-#include "rock_gazebo/CameraTaskBase.hpp"
+#include "rock_gazebo/SensorTaskBase.hpp"
+#include <gazebo/transport/Node.hh>
 
 namespace rock_gazebo{
 
-    class CameraTask : public CameraTaskBase
+    /*! \class SensorTask
+     * \brief The task context provides and requires services. It uses an ExecutionEngine to perform its functions.
+     * Essential interfaces are operations, data flow ports and properties. These interfaces have been defined using the oroGen specification.
+     * In order to modify the interfaces you should (re)use oroGen and rely on the associated workflow.
+     * 
+     * \details
+     * The name of a TaskContext is primarily defined via:
+     \verbatim
+     deployment 'deployment_name'
+         task('custom_task_name','rock_gazebo::SensorTask')
+     end
+     \endverbatim
+     *  It can be dynamically adapted when the deployment is called with a prefix argument.
+     */
+    class SensorTask : public SensorTaskBase
     {
-	friend class CameraTaskBase;
+	friend class SensorTaskBase;
     protected:
 
 
+
     public:
-        /** TaskContext constructor for CameraTask
+        /** TaskContext constructor for SensorTask
          * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
          * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
          */
-        CameraTask(std::string const& name = "rock_gazebo::CameraTask");
+        SensorTask(std::string const& name = "rock_gazebo::SensorTask");
 
-        /** TaskContext constructor for CameraTask
+        /** TaskContext constructor for SensorTask
          * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices.
          * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task.
          * 
          */
-        CameraTask(std::string const& name, RTT::ExecutionEngine* engine);
+        SensorTask(std::string const& name, RTT::ExecutionEngine* engine);
 
-        /** Default deconstructor of CameraTask
+        /** Default deconstructor of SensorTask
          */
-	~CameraTask();
+	~SensorTask();
 
         /** This hook is called by Orocos when the state machine transitions
          * from PreOperational to Stopped. If it returns false, then the
@@ -93,11 +105,24 @@ namespace rock_gazebo{
          */
         void cleanupHook();
 
+        typedef gazebo::physics::ModelPtr ModelPtr;
+        virtual void setGazeboModel(ModelPtr model, sdf::ElementPtr sdfSensor);
 
-    private:
-        void readInput( ConstImageStampedPtr &imageMsg);
-        bool bnew_data;
-        RTT::extras::ReadOnlyPointer<base::samples::frame::Frame> output_frame;	
+    protected:
+        template<typename M, typename T>
+        void topicSubscribe(void(T::*_fp)(const boost::shared_ptr< M const > &), std::string topicName)
+        {
+            subscriber = node->Subscribe(topicName, _fp, static_cast<T*>(this));
+            gzmsg << getName() << ": subscribed to gazebo topic ~/" + topicName << std::endl;
+        }
+
+        ModelPtr gazeboModel;
+        sdf::ElementPtr sdfSensor;
+        gazebo::transport::SubscriberPtr subscriber;
+        gazebo::transport::NodePtr node;
+        std::mutex readMutex;
+        std::string sensorFullName;
+        std::string baseTopicName;
     };
 }
 

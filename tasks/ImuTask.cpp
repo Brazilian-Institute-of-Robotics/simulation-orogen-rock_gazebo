@@ -31,19 +31,13 @@ bool ImuTask::configureHook()
     if (! ImuTaskBase::configureHook())
         return false;
 
-    // Initialize communication node and subscribe to gazebo topic
-    node = transport::NodePtr( new transport::Node() );
-    node->Init();
-
-    imu_subscriber = node->Subscribe("~/" + topicName, &ImuTask::readInput, this);
-    gzmsg << "ImuTask: subscribing to gazebo topic ~/" + topicName << endl;
-
     return true;
 }
 bool ImuTask::startHook()
 {
     if (! ImuTaskBase::startHook())
         return false;
+    topicSubscribe(&ImuTask::readInput, baseTopicName + "/imu");
     return true;
 }
 void ImuTask::updateHook()
@@ -71,20 +65,6 @@ void ImuTask::stopHook()
 void ImuTask::cleanupHook()
 {
     ImuTaskBase::cleanupHook();
-    node->Fini();
-}
-
-void ImuTask::setGazeboModel( ModelPtr model, string sensorName, string topicName )
-{
-    string taskName = "gazebo:" + model->GetWorld()->GetName() + ":" + model->GetName() + ":" + sensorName;
-    if(!provides())
-        throw std::runtime_error("ImuTask::provides returned NULL");
-    provides()->setName(taskName);
-    _name.set(taskName);
-    BaseTask::setGazeboWorld( model->GetWorld() );
-
-    // Set topic name to communicate with Gazebo
-    this->topicName = topicName;
 }
 
 void ImuTask::readInput( ConstIMUPtr & imuMsg)

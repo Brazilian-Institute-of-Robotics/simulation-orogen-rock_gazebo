@@ -3,8 +3,6 @@
 #ifndef ROCK_GAZEBO_IMUTASK_TASK_HPP
 #define ROCK_GAZEBO_IMUTASK_TASK_HPP
 
-#include <gazebo/physics/physics.hh>
-#include <gazebo/transport/transport.hh>
 #include <gazebo/msgs/imu.pb.h>
 #include <base/samples/IMUSensors.hpp>
 
@@ -109,14 +107,9 @@ namespace rock_gazebo{
          */
         void cleanupHook();
 
-        typedef gazebo::physics::ModelPtr ModelPtr;
-        void setGazeboModel( ModelPtr model, std::string sensorName, std::string topicName);
         void readInput( ConstIMUPtr &imuMsg);
 
     private:
-        std::string topicName;
-        gazebo::transport::NodePtr node;
-        gazebo::transport::SubscriberPtr imu_subscriber;
         base::samples::RigidBodyState imu_reading;
         base::samples::IMUSensors imu_samples;
     };

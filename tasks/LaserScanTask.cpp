@@ -28,12 +28,7 @@ bool LaserScanTask::configureHook()
     if (! LaserScanTaskBase::configureHook())
         return false;
 
-    // Initialize communication node and subscribe to gazebo topic
-    node = transport::NodePtr( new transport::Node() );
-    node->Init();
-    laserScanSubscriber = node->Subscribe("~/" + topicName, &LaserScanTask::readInput, this);
-    gzmsg << "LaserScanTask: subscribing to gazebo topic ~/" + topicName << endl;
-
+    topicSubscribe(&LaserScanTask::readInput, baseTopicName + "/scan");
     return true;
 }
 
@@ -66,19 +61,6 @@ void LaserScanTask::cleanupHook()
 {
     LaserScanTaskBase::cleanupHook();
 
-    node->Fini();
-}
-
-void LaserScanTask::setGazeboModel( ModelPtr model, string sensorName, string topicName )
-{
-    string taskName = "gazebo:" + model->GetWorld()->GetName() + ":" + model->GetName() + ":" + sensorName;
-    provides()->setName(taskName);
-    _name.set(taskName);
-
-    BaseTask::setGazeboWorld( model->GetWorld() );
-
-    // Set topic name to communicate with Gazebo
-    this->topicName = topicName;
 }
 
 
