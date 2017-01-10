@@ -4,13 +4,13 @@
 
 using namespace rock_gazebo;
 
-BaseTask::BaseTask(std::string const& name, TaskCore::TaskState initial_state)
-    : BaseTaskBase(name, initial_state)
+BaseTask::BaseTask(std::string const& name)
+    : BaseTaskBase(name)
 {
 }
 
-BaseTask::BaseTask(std::string const& name, RTT::ExecutionEngine* engine, TaskCore::TaskState initial_state)
-    : BaseTaskBase(name, engine, initial_state)
+BaseTask::BaseTask(std::string const& name, RTT::ExecutionEngine* engine)
+    : BaseTaskBase(name, engine)
 {
 }
 

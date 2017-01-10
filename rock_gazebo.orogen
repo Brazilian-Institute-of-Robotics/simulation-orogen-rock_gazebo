@@ -17,6 +17,8 @@ task_context "WorldTask" do
 end
 
 task_context "BaseTask" do
+    needs_configuration
+
     # Controls whether the components should use the simulation time (the
     # default) or wall-clock time
     property "use_sim_time", "/bool", true
@@ -75,8 +77,6 @@ task_context "ThrusterTask" do
 end
 
 task_context "LaserScanTask" do
-    needs_configuration
-
     subclasses 'BaseTask'
 
     # Laser line full name
@@ -87,8 +87,6 @@ task_context "LaserScanTask" do
 end
 
 task_context "CameraTask" do
-    needs_configuration
-
     subclasses 'BaseTask'
 
     # Camera full name
@@ -99,8 +97,6 @@ task_context "CameraTask" do
 end
 
 task_context "ImuTask" do
-    needs_configuration
-
     subclasses 'BaseTask'
 
     # IMU full name
