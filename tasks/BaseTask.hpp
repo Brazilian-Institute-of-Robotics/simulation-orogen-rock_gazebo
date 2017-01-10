@@ -39,6 +39,16 @@ namespace rock_gazebo {
          */
         base::Time getCurrentTime() const;
 
+        /** @overload
+         */
+        base::Time getCurrentTime(gazebo::msgs::Time sim_timestamp) const;
+
+        /** Returns either the simulated timestamp, or a time-shifted timestamp
+         * that matches the wall-clock time, depending on the value of the
+         * use_sim_time property
+         */
+        base::Time getCurrentTime(base::Time sim_timestamp) const;
+
         void setGazeboWorld(WorldPtr);
 
         /** TaskContext constructor for BaseTask

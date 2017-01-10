@@ -27,8 +27,7 @@ namespace rock_gazebo{
 
     private:
         void readInput( ConstLaserScanStampedPtr &laserScanMSG );
-
-        base::samples::LaserScan laserScanCMD;
+        std::vector<base::samples::LaserScan> scans;
     };
 }
 

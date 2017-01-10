@@ -37,21 +37,24 @@ bool ImuTask::startHook()
 {
     if (! ImuTaskBase::startHook())
         return false;
+
+    samples.clear();
     topicSubscribe(&ImuTask::readInput, baseTopicName + "/imu");
     return true;
 }
 void ImuTask::updateHook()
 {
     ImuTaskBase::updateHook();
-    if(imu_reading.hasValidOrientation())
+
+    Samples samples;
+    { lock_guard<mutex> readGuard(readMutex);
+        samples = move(this->samples);
+    }
+
+    for (auto const& sample : samples)
     {
-        imu_reading.sourceFrame = _imu_frame.value();
-        imu_reading.targetFrame = _world_frame.value();
-        imu_reading.time = getCurrentTime();
-        _orientation_samples.write(imu_reading);
-        imu_reading.invalidate();
-        imu_samples.time = getCurrentTime();
-        _imu_samples.write(imu_samples);
+        _orientation_samples.write(sample.first);
+        _imu_samples.write(sample.second);
     }
 }
 void ImuTask::errorHook()
@@ -68,31 +71,26 @@ void ImuTask::cleanupHook()
 }
 
 void ImuTask::readInput( ConstIMUPtr & imuMsg)
-{
-    if(!imuMsg->has_orientation())
-        throw std::runtime_error("rock_gazebo::ImuTask requires has_orientation");
-    if(!imuMsg->has_angular_velocity())
-        throw std::runtime_error("rock_gazebo::ImuTask requires has_angular_velocity");
-    if(!imuMsg->has_linear_acceleration())
-        throw std::runtime_error("rock_gazebo::ImuTask requires has_linear_acceleration");
+{ lock_guard<mutex> readGuard(readMutex);
+    const gazebo::msgs::Quaternion &quat = imuMsg->orientation();
+    const gazebo::msgs::Vector3d& avel =  imuMsg->angular_velocity();
+    const gazebo::msgs::Vector3d& linacc =  imuMsg->linear_acceleration();
 
-    const ::gazebo::msgs::Quaternion &quat = imuMsg->orientation();
-    if(!quat.has_x() || !quat.has_y() || !quat.has_z() || !quat.has_w())
-        throw std::runtime_error("rock_gazebo::ImuTask: invalid quaternion");
-    imu_reading.orientation = base::Orientation(quat.w(),quat.x(),quat.y(),quat.z());
-    imu_samples.mag = base::Vector3d(imu_reading.getRoll(), imu_reading.getPitch(),
-            imu_reading.getYaw());
+    base::Time stamp = getCurrentTime(imuMsg->stamp());
 
-    const ::gazebo::msgs::Vector3d& avel =  imuMsg->angular_velocity();
-    if(!avel.has_x() || !avel.has_y() || !avel.has_z())
-        throw std::runtime_error("rock_gazebo::ImuTask: invalid Vector3d for angular velocity");
-    imu_reading.time = getCurrentTime();
-    imu_reading.angular_velocity = base::Vector3d(avel.x(),avel.y(),avel.z());
-    imu_samples.gyro = imu_reading.angular_velocity;
+    base::samples::IMUSensors imu_sensors;
+    base::samples::RigidBodyState orientation;
+    orientation.time = stamp;
+    orientation.sourceFrame = _imu_frame.value();
+    orientation.targetFrame = _world_frame.value();
+    orientation.orientation = base::Orientation(quat.w(),quat.x(),quat.y(),quat.z());
+    orientation.angular_velocity = base::Vector3d(avel.x(),avel.y(),avel.z());
 
-    const ::gazebo::msgs::Vector3d& linacc =  imuMsg->linear_acceleration();
-    if(!linacc.has_x() || !linacc.has_y() || !linacc.has_z())
-        throw std::runtime_error("rock_gazebo::ImuTask: invalid Vector3d for linear acceleration");
-    imu_samples.acc = base::Vector3d(linacc.x(), linacc.y(), linacc.z());
+    imu_sensors.time = stamp;
+    imu_sensors.mag  = base::getEuler(orientation.orientation);
+    imu_sensors.gyro = base::Vector3d(avel.x(),avel.y(),avel.z());
+    imu_sensors.acc  = base::Vector3d(linacc.x(), linacc.y(), linacc.z());
+
+    samples.push_back(make_pair(orientation, imu_sensors));
 }
 

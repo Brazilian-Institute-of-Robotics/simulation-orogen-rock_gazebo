@@ -3,10 +3,14 @@
 #ifndef ROCK_GAZEBO_IMUTASK_TASK_HPP
 #define ROCK_GAZEBO_IMUTASK_TASK_HPP
 
-#include <gazebo/msgs/imu.pb.h>
-#include <base/samples/IMUSensors.hpp>
-
 #include "rock_gazebo/ImuTaskBase.hpp"
+
+#include <list>
+#include <utility>
+
+#include <base/samples/IMUSensors.hpp>
+#include <base/samples/RigidBodyState.hpp>
+#include <gazebo/msgs/imu.pb.h>
 
 namespace rock_gazebo{
 
@@ -110,8 +114,8 @@ namespace rock_gazebo{
         void readInput( ConstIMUPtr &imuMsg);
 
     private:
-        base::samples::RigidBodyState imu_reading;
-        base::samples::IMUSensors imu_samples;
+        typedef std::vector<std::pair<base::samples::RigidBodyState, base::samples::IMUSensors>> Samples;
+        Samples samples;
     };
 }
 
