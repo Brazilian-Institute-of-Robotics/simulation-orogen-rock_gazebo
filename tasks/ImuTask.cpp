@@ -31,6 +31,7 @@ bool ImuTask::configureHook()
     if (! ImuTaskBase::configureHook())
         return false;
 
+    topicSubscribe(&ImuTask::readInput, baseTopicName + "/imu");
     return true;
 }
 bool ImuTask::startHook()
@@ -39,7 +40,6 @@ bool ImuTask::startHook()
         return false;
 
     samples.clear();
-    topicSubscribe(&ImuTask::readInput, baseTopicName + "/imu");
     return true;
 }
 void ImuTask::updateHook()
