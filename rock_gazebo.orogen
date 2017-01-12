@@ -121,14 +121,20 @@ task_context "GPSTask" do
     # The name of the frame attached to the GPS'
     property('gps_frame', '/std/string', 'gps')
 
-    # The name of the world frame'
-    property('world_frame', '/std/string', 'nwu')
+    # The name of the reference frame for the UTM samples
+    property('utm_frame', '/std/string', 'utm')
+
+    # The name of the reference frame for the position samples
+    property('nwu_frame', '/std/string', 'nwu')
 
     # The raw GPS position
     output_port "gps_solution", "gps_base/Solution"
 
-    # Computed position in m, in the UTM coordinate provided and local to the origin
-    output_port('position_samples', '/base/samples/RigidBodyState')
+    # Computed UTM position
+    output_port 'utm_samples', '/base/samples/RigidBodyState'
+
+    # Computed position in m, in the NWU coordinate frame
+    output_port 'position_samples', '/base/samples/RigidBodyState'
 
     # UTM zone for conversion of WGS84 to UTM
     property("utm_zone", "int", 32)
@@ -137,6 +143,6 @@ task_context "GPSTask" do
     property("utm_north", "bool", true)
 
     # Origin in UTM coordinates, that is used for position readings.
-    property("origin", "/base/Position")
+    property("nwu_origin", "/base/Position")
 end
 

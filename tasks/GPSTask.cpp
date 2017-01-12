@@ -8,14 +8,18 @@ using namespace rock_gazebo;
 
 GPSTask::GPSTask(std::string const& name)
     : GPSTaskBase(name)
-    , deviationHorizontal(base::unknown<double>()), deviationVertical(base::unknown<double>())
+    , deviationHorizontal(base::unknown<double>())
+    , deviationVertical(base::unknown<double>())
 {
+    _nwu_origin.set(base::Position::Zero());
 }
 
 GPSTask::GPSTask(std::string const& name, RTT::ExecutionEngine* engine)
     : GPSTaskBase(name, engine)
-    , deviationHorizontal(base::unknown<double>()), deviationVertical(base::unknown<double>())
+    , deviationHorizontal(base::unknown<double>())
+    , deviationVertical(base::unknown<double>())
 {
+    _nwu_origin.set(base::Position::Zero());
 }
 
 GPSTask::~GPSTask()
@@ -40,9 +44,9 @@ bool GPSTask::startHook()
 {
     if (! GPSTaskBase::startHook())
         return false;
-    utm_converter.setUtmZone(_utm_zone.value());
-    utm_converter.setUtmNorth(_utm_north.value());
-    utm_converter.setOrigin(_origin.value());
+    utm_converter.setUTMZone(_utm_zone.value());
+    utm_converter.setUTMNorth(_utm_north.value());
+    utm_converter.setNWUOrigin(_nwu_origin.value());
     solutions.clear();
     return true;
 }
@@ -57,12 +61,16 @@ void GPSTask::updateHook()
     for (auto const& solution : solutions)
     {
         _gps_solution.write(solution);
-        base::samples::RigidBodyState rbs;
-        rbs.sourceFrame = _gps_frame.value();
-        rbs.targetFrame = _world_frame.value();
-        utm_converter.convertSolutionToRBS(solution, rbs);
-        rbs.time = solution.time;
-        _position_samples.write(rbs);
+
+        base::samples::RigidBodyState utm = utm_converter.convertToUTM(solution);
+        utm.sourceFrame = _gps_frame.value();
+        utm.targetFrame = _utm_frame.value();
+        _utm_samples.write(utm);
+
+        base::samples::RigidBodyState position = utm_converter.convertToNWU(utm);
+        position.sourceFrame = _gps_frame.value();
+        position.targetFrame = _nwu_frame.value();
+        _position_samples.write(position);
     }
     GPSTaskBase::updateHook();
 }
