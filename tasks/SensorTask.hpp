@@ -1,15 +1,14 @@
 /* Generated from orogen/lib/orogen/templates/tasks/Task.hpp */
 
-#ifndef ROCK_GAZEBO_BASETASK_TASK_HPP
-#define ROCK_GAZEBO_BASETASK_TASK_HPP
+#ifndef ROCK_GAZEBO_SENSORTASK_TASK_HPP
+#define ROCK_GAZEBO_SENSORTASK_TASK_HPP
 
-#include "rock_gazebo/BaseTaskBase.hpp"
-#include <gazebo/physics/physics.hh>
-#include <base/Time.hpp>
+#include "rock_gazebo/SensorTaskBase.hpp"
+#include <gazebo/transport/Node.hh>
 
-namespace rock_gazebo {
+namespace rock_gazebo{
 
-    /*! \class BaseTask 
+    /*! \class SensorTask
      * \brief The task context provides and requires services. It uses an ExecutionEngine to perform its functions.
      * Essential interfaces are operations, data flow ports and properties. These interfaces have been defined using the oroGen specification.
      * In order to modify the interfaces you should (re)use oroGen and rely on the associated workflow.
@@ -18,53 +17,35 @@ namespace rock_gazebo {
      * The name of a TaskContext is primarily defined via:
      \verbatim
      deployment 'deployment_name'
-         task('custom_task_name','rock_gazebo::BaseTask')
+         task('custom_task_name','rock_gazebo::SensorTask')
      end
      \endverbatim
-     *  It can be dynamically adapted when the deployment is called with a prefix argument. 
+     *  It can be dynamically adapted when the deployment is called with a prefix argument.
      */
-    class BaseTask : public BaseTaskBase
+    class SensorTask : public SensorTaskBase
     {
-	friend class BaseTaskBase;
-
+	friend class SensorTaskBase;
     protected:
-        typedef gazebo::physics::WorldPtr WorldPtr;
-        WorldPtr world;
+
+
 
     public:
-        /** Returns the simulated time */
-        base::Time getSimTime() const;
-        /** Returns either the simulated or wall-clock time, depending on the
-         * value of the use_sim_time property
-         */
-        base::Time getCurrentTime() const;
-
-        /** @overload
-         */
-        base::Time getCurrentTime(gazebo::msgs::Time sim_timestamp) const;
-
-        /** Returns either the simulated timestamp, or a time-shifted timestamp
-         * that matches the wall-clock time, depending on the value of the
-         * use_sim_time property
-         */
-        base::Time getCurrentTime(base::Time sim_timestamp) const;
-
-        void setGazeboWorld(WorldPtr);
-
-        /** TaskContext constructor for BaseTask
+        /** TaskContext constructor for SensorTask
          * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
+         * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
          */
-        BaseTask(std::string const& name = "rock_gazebo::BaseTask");
+        SensorTask(std::string const& name = "rock_gazebo::SensorTask");
 
-        /** TaskContext constructor for BaseTask 
-         * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices. 
-         * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task. 
+        /** TaskContext constructor for SensorTask
+         * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices.
+         * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task.
+         * 
          */
-        BaseTask(std::string const& name, RTT::ExecutionEngine* engine);
+        SensorTask(std::string const& name, RTT::ExecutionEngine* engine);
 
-        /** Default deconstructor of BaseTask
+        /** Default deconstructor of SensorTask
          */
-	~BaseTask();
+	~SensorTask();
 
         /** This hook is called by Orocos when the state machine transitions
          * from PreOperational to Stopped. If it returns false, then the
@@ -95,7 +76,7 @@ namespace rock_gazebo {
          *
          * The error(), exception() and fatal() calls, when called in this hook,
          * allow to get into the associated RunTimeError, Exception and
-         * FatalError states. 
+         * FatalError states.
          *
          * In the first case, updateHook() is still called, and recover() allows
          * you to go back into the Running state.  In the second case, the
@@ -123,6 +104,25 @@ namespace rock_gazebo {
          * before calling start() again.
          */
         void cleanupHook();
+
+        typedef gazebo::physics::ModelPtr ModelPtr;
+        virtual void setGazeboModel(ModelPtr model, sdf::ElementPtr sdfSensor);
+
+    protected:
+        template<typename M, typename T>
+        void topicSubscribe(void(T::*_fp)(const boost::shared_ptr< M const > &), std::string topicName)
+        {
+            subscriber = node->Subscribe(topicName, _fp, static_cast<T*>(this));
+            gzmsg << getName() << ": subscribed to gazebo topic ~/" + topicName << std::endl;
+        }
+
+        ModelPtr gazeboModel;
+        sdf::ElementPtr sdfSensor;
+        gazebo::transport::SubscriberPtr subscriber;
+        gazebo::transport::NodePtr node;
+        std::mutex readMutex;
+        std::string sensorFullName;
+        std::string baseTopicName;
     };
 }
 

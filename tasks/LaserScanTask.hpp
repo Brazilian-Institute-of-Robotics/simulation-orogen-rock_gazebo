@@ -24,17 +24,10 @@ namespace rock_gazebo{
         void stopHook();
         void cleanupHook();
 
-        typedef gazebo::physics::ModelPtr ModelPtr;
-
-        void setGazeboModel( ModelPtr model, std::string sensorName, std::string topicName);
-        void readInput( ConstLaserScanStampedPtr &laserScanMSG );
 
     private:
-        std::string topicName;
-        gazebo::transport::NodePtr node;
-        gazebo::transport::SubscriberPtr laserScanSubscriber;
-
-        base::samples::LaserScan laserScanCMD;
+        void readInput( ConstLaserScanStampedPtr &laserScanMSG );
+        std::vector<base::samples::LaserScan> scans;
     };
 }
 

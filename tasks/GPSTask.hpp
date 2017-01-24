@@ -1,15 +1,17 @@
 /* Generated from orogen/lib/orogen/templates/tasks/Task.hpp */
 
-#ifndef ROCK_GAZEBO_BASETASK_TASK_HPP
-#define ROCK_GAZEBO_BASETASK_TASK_HPP
+#ifndef ROCK_GAZEBO_GPSTASK_TASK_HPP
+#define ROCK_GAZEBO_GPSTASK_TASK_HPP
 
-#include "rock_gazebo/BaseTaskBase.hpp"
-#include <gazebo/physics/physics.hh>
-#include <base/Time.hpp>
+#include "rock_gazebo/GPSTaskBase.hpp"
+#include <gps_base/BaseTypes.hpp>
+#include <gps_base/UTMConverter.hpp>
 
-namespace rock_gazebo {
+#include <gazebo/msgs/gps.pb.h>
 
-    /*! \class BaseTask 
+namespace rock_gazebo{
+
+    /*! \class GPSTask
      * \brief The task context provides and requires services. It uses an ExecutionEngine to perform its functions.
      * Essential interfaces are operations, data flow ports and properties. These interfaces have been defined using the oroGen specification.
      * In order to modify the interfaces you should (re)use oroGen and rely on the associated workflow.
@@ -18,53 +20,43 @@ namespace rock_gazebo {
      * The name of a TaskContext is primarily defined via:
      \verbatim
      deployment 'deployment_name'
-         task('custom_task_name','rock_gazebo::BaseTask')
+         task('custom_task_name','rock_gazebo::GPSTask')
      end
      \endverbatim
-     *  It can be dynamically adapted when the deployment is called with a prefix argument. 
+     *  It can be dynamically adapted when the deployment is called with a prefix argument.
      */
-    class BaseTask : public BaseTaskBase
+    class GPSTask : public GPSTaskBase
     {
-	friend class BaseTaskBase;
+	friend class GPSTaskBase;
+
+    private:
+        gps_base::UTMConverter utm_converter;
+        double deviationHorizontal;
+        double deviationVertical;
+        void setGazeboModel(ModelPtr model, sdf::ElementPtr sdfSensor);
+
+        std::vector<gps_base::Solution> solutions;
 
     protected:
-        typedef gazebo::physics::WorldPtr WorldPtr;
-        WorldPtr world;
+        void readInput(ConstGPSPtr &msg);
 
     public:
-        /** Returns the simulated time */
-        base::Time getSimTime() const;
-        /** Returns either the simulated or wall-clock time, depending on the
-         * value of the use_sim_time property
-         */
-        base::Time getCurrentTime() const;
-
-        /** @overload
-         */
-        base::Time getCurrentTime(gazebo::msgs::Time sim_timestamp) const;
-
-        /** Returns either the simulated timestamp, or a time-shifted timestamp
-         * that matches the wall-clock time, depending on the value of the
-         * use_sim_time property
-         */
-        base::Time getCurrentTime(base::Time sim_timestamp) const;
-
-        void setGazeboWorld(WorldPtr);
-
-        /** TaskContext constructor for BaseTask
+        /** TaskContext constructor for GPSTask
          * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
+         * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
          */
-        BaseTask(std::string const& name = "rock_gazebo::BaseTask");
+        GPSTask(std::string const& name = "rock_gazebo::GPSTask");
 
-        /** TaskContext constructor for BaseTask 
-         * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices. 
-         * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task. 
+        /** TaskContext constructor for GPSTask
+         * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices.
+         * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task.
+         * 
          */
-        BaseTask(std::string const& name, RTT::ExecutionEngine* engine);
+        GPSTask(std::string const& name, RTT::ExecutionEngine* engine);
 
-        /** Default deconstructor of BaseTask
+        /** Default deconstructor of GPSTask
          */
-	~BaseTask();
+	~GPSTask();
 
         /** This hook is called by Orocos when the state machine transitions
          * from PreOperational to Stopped. If it returns false, then the
@@ -95,7 +87,7 @@ namespace rock_gazebo {
          *
          * The error(), exception() and fatal() calls, when called in this hook,
          * allow to get into the associated RunTimeError, Exception and
-         * FatalError states. 
+         * FatalError states.
          *
          * In the first case, updateHook() is still called, and recover() allows
          * you to go back into the Running state.  In the second case, the

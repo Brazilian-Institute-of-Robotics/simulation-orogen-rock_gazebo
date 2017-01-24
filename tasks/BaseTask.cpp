@@ -4,13 +4,13 @@
 
 using namespace rock_gazebo;
 
-BaseTask::BaseTask(std::string const& name, TaskCore::TaskState initial_state)
-    : BaseTaskBase(name, initial_state)
+BaseTask::BaseTask(std::string const& name)
+    : BaseTaskBase(name)
 {
 }
 
-BaseTask::BaseTask(std::string const& name, RTT::ExecutionEngine* engine, TaskCore::TaskState initial_state)
-    : BaseTaskBase(name, engine, initial_state)
+BaseTask::BaseTask(std::string const& name, RTT::ExecutionEngine* engine)
+    : BaseTaskBase(name, engine)
 {
 }
 
@@ -28,6 +28,21 @@ base::Time BaseTask::getSimTime() const
     gazebo::common::Time sim_time = world->GetSimTime();
     return base::Time::fromSeconds(sim_time.sec) +
         base::Time::fromMicroseconds(sim_time.nsec / 1000);
+}
+
+base::Time BaseTask::getCurrentTime(gazebo::msgs::Time sim_timestamp) const
+{
+    return getCurrentTime(base::Time::fromMicroseconds(
+                sim_timestamp.sec() * 1000000 + sim_timestamp.nsec() / 1000)
+            );
+}
+
+base::Time BaseTask::getCurrentTime(base::Time sim_timestamp) const
+{
+    if (_use_sim_time)
+        return sim_timestamp;
+    else
+        return base::Time::now() - (getSimTime() - sim_timestamp);
 }
 
 base::Time BaseTask::getCurrentTime() const

@@ -93,15 +93,9 @@ namespace rock_gazebo{
          */
         void cleanupHook();
 
-        typedef gazebo::physics::ModelPtr ModelPtr;
-
-        void setGazeboModel( ModelPtr model, std::string sensorName, std::string topicName);
-        void readInput( ConstImageStampedPtr &imageMsg);
 
     private:
-        std::string topicName;
-        gazebo::transport::NodePtr node;
-        gazebo::transport::SubscriberPtr image_subscriber;
+        void readInput( ConstImageStampedPtr &imageMsg);
         bool bnew_data;
         RTT::extras::ReadOnlyPointer<base::samples::frame::Frame> output_frame;	
     };

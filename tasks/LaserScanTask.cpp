@@ -28,12 +28,7 @@ bool LaserScanTask::configureHook()
     if (! LaserScanTaskBase::configureHook())
         return false;
 
-    // Initialize communication node and subscribe to gazebo topic
-    node = transport::NodePtr( new transport::Node() );
-    node->Init();
-    laserScanSubscriber = node->Subscribe("~/" + topicName, &LaserScanTask::readInput, this);
-    gzmsg << "LaserScanTask: subscribing to gazebo topic ~/" + topicName << endl;
-
+    topicSubscribe(&LaserScanTask::readInput, baseTopicName + "/scan");
     return true;
 }
 
@@ -41,6 +36,7 @@ bool LaserScanTask::startHook()
 {
     if (! LaserScanTaskBase::startHook())
         return false;
+    scans.clear();
     return true;
 }
 
@@ -48,8 +44,13 @@ void LaserScanTask::updateHook()
 {
     LaserScanTaskBase::updateHook();
 
-    laserScanCMD.time = getCurrentTime();
-    _laser_scan_samples.write( laserScanCMD );
+    vector<base::samples::LaserScan> scans;
+    { lock_guard<mutex> readGuard(readMutex);
+        scans = move(this->scans);
+    }
+
+    for (auto const& scan : scans)
+        _laser_scan_samples.write(scan);
 }
 
 void LaserScanTask::errorHook()
@@ -65,60 +66,36 @@ void LaserScanTask::stopHook()
 void LaserScanTask::cleanupHook()
 {
     LaserScanTaskBase::cleanupHook();
-
-    node->Fini();
 }
-
-void LaserScanTask::setGazeboModel( ModelPtr model, string sensorName, string topicName )
-{
-    string taskName = "gazebo:" + model->GetWorld()->GetName() + ":" + model->GetName() + ":" + sensorName;
-    provides()->setName(taskName);
-    _name.set(taskName);
-
-    BaseTask::setGazeboWorld( model->GetWorld() );
-
-    // Set topic name to communicate with Gazebo
-    this->topicName = topicName;
-}
-
 
 void LaserScanTask::readInput( ConstLaserScanStampedPtr & laserScanMSG )
-{
-    laserScanCMD.ranges.clear();
-
-    if( !laserScanMSG->scan().has_range_max() )
-        throw std::runtime_error("rock_gazebo::LaserScanTask requires range_max to be set");
-
-    if( !laserScanMSG->scan().has_range_min() )
-        throw std::runtime_error("rock_gazebo::LaserScanTask requires range_min to be set");
-
-    if( !laserScanMSG->scan().has_angle_step() )
-        throw std::runtime_error("rock_gazebo::LaserScanTask requires angle_step to be set");
-
-    if( !laserScanMSG->scan().has_angle_min() )
-        throw std::runtime_error("rock_gazebo::LaserScanTask requires angle_min to be set");
-
+{ lock_guard<mutex> readGuard(readMutex);
     double range_min = laserScanMSG->scan().range_min();
     double range_max = laserScanMSG->scan().range_max();
 
-    laserScanCMD.minRange = meters_to_milimeters(range_min);
-    laserScanCMD.maxRange = meters_to_milimeters(range_max);
-    laserScanCMD.angular_resolution = laserScanMSG->scan().angle_step();
-    laserScanCMD.start_angle = laserScanMSG->scan().angle_min();
+    base::samples::LaserScan scan;
+    scan.time = getCurrentTime(laserScanMSG->time());
+    scan.minRange = meters_to_milimeters(range_min);
+    scan.maxRange = meters_to_milimeters(range_max);
+    scan.angular_resolution = laserScanMSG->scan().angle_step();
+    scan.start_angle = laserScanMSG->scan().angle_min();
 
-    for(int i = 0; i < laserScanMSG->scan().ranges_size(); ++i) {
+    unsigned int scan_size = laserScanMSG->scan().ranges_size();
+    scan.ranges.resize(scan_size);
+    for(unsigned int i = 0; i < scan_size; ++i) {
         double range = laserScanMSG->scan().ranges(i);
 
         if (range >= range_max) {
-            laserScanCMD.ranges.push_back(base::samples::TOO_FAR);
+            scan.ranges[i] = base::samples::TOO_FAR;
         }
         else if (range <= range_min) {
-            laserScanCMD.ranges.push_back(base::samples::TOO_NEAR);
+            scan.ranges[i] = base::samples::TOO_NEAR;
         }
         else {
-            laserScanCMD.ranges.push_back(meters_to_milimeters(range));
+            scan.ranges[i] = meters_to_milimeters(range);
         }
     }
+    scans.push_back(scan);
 }
 
 

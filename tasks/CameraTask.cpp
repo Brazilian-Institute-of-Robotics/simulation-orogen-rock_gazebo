@@ -33,11 +33,7 @@ bool CameraTask::configureHook()
     if (! CameraTaskBase::configureHook())
         return false;
 
-    // Initialize communication node and subscribe to gazebo topic
-    node = transport::NodePtr( new transport::Node() );
-    node->Init();
-    image_subscriber = node->Subscribe("~/" + topicName, &CameraTask::readInput, this);
-    gzmsg << "CameraTask: subscribing to gazebo topic ~/" + topicName << endl;
+    topicSubscribe(&CameraTask::readInput, baseTopicName + "/image");
     return true;
 }
 bool CameraTask::startHook()
@@ -50,10 +46,12 @@ bool CameraTask::startHook()
 void CameraTask::updateHook()
 {
     CameraTaskBase::updateHook();
-    if(bnew_data)
-    {
-        _frame.write(output_frame);
-        bnew_data = false;
+    { lock_guard<mutex> readGuard(readMutex);
+        if(bnew_data)
+        {
+            _frame.write(output_frame);
+            bnew_data = false;
+        }
     }
 }
 void CameraTask::errorHook()
@@ -63,40 +61,15 @@ void CameraTask::errorHook()
 void CameraTask::stopHook()
 {
     CameraTaskBase::stopHook();
-    node->Fini();
 }
 void CameraTask::cleanupHook()
 {
     CameraTaskBase::cleanupHook();
 }
 
-void CameraTask::setGazeboModel( ModelPtr model, string sensorName, string topicName )
-{
-    string taskName = "gazebo:" + model->GetWorld()->GetName() + ":" + model->GetName() + ":" + sensorName;
-    if(!provides())
-        throw std::runtime_error("CameraTask::provides returned NULL");
-    provides()->setName(taskName);
-    _name.set(taskName);
-
-    BaseTask::setGazeboWorld( model->GetWorld() );
-
-    // Set topic name to communicate with Gazebo
-    this->topicName = topicName;
-}
-
 void CameraTask::readInput( ConstImageStampedPtr & imageMsg)
-{
+{ lock_guard<mutex> readGuard(readMutex);
     const msgs::Image &image = imageMsg->image();
-    if(!image.has_width())
-        throw std::runtime_error("rock_gazebo::CameraTask requires has_width");
-    if(!image.has_height())
-        throw std::runtime_error("rock_gazebo::CameraTask requires has_height");
-    if(!image.has_pixel_format())
-        throw std::runtime_error("rock_gazebo::CameraTask requires has_pixel_format");
-    if(!image.has_step())
-        throw std::runtime_error("rock_gazebo::CameraTask requires has_step");
-    if(!image.has_data())
-        throw std::runtime_error("rock_gazebo::CameraTask requires has_data");
 
     // Convert the image data to RGB and copy to frame struct
     common::Image img;

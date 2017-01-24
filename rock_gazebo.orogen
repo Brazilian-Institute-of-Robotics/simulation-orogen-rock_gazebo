@@ -1,6 +1,7 @@
 name "rock_gazebo"
 import_types_from "base"
 import_types_from "rock_gazeboTypes.hpp"
+import_types_from "gps_base"
 
 using_library "gazebo"
 using_library "gazebo_thruster"
@@ -17,6 +18,8 @@ task_context "WorldTask" do
 end
 
 task_context "BaseTask" do
+    needs_configuration
+
     # Controls whether the components should use the simulation time (the
     # default) or wall-clock time
     property "use_sim_time", "/bool", true
@@ -74,37 +77,30 @@ task_context "ThrusterTask" do
     output_port "joint_samples", "/base/samples/Joints"
 end
 
-task_context "LaserScanTask" do
-    needs_configuration
+task_context "SensorTask" do
+    subclasses "BaseTask"
+    abstract
 
-    subclasses 'BaseTask'
-
-    # Laser line full name
+    # The sensor's full name
     attribute "name", "/std/string"
+end
+
+task_context "LaserScanTask" do
+    subclasses 'SensorTask'
 
     # Laser line output port
     output_port "laser_scan_samples", "/base/samples/LaserScan"
 end
 
 task_context "CameraTask" do
-    needs_configuration
-
-    subclasses 'BaseTask'
-
-    # Camera full name
-    attribute "name", "/std/string"
+    subclasses 'SensorTask'
 
     # Camera output port
     output_port 'frame', ro_ptr('base::samples::frame::Frame')
 end
 
 task_context "ImuTask" do
-    needs_configuration
-
-    subclasses 'BaseTask'
-
-    # IMU full name
-    attribute "name", "/std/string"
+    subclasses 'SensorTask'
 
     # The name of the frame attached to the IMU'
     property('imu_frame', '/std/string', 'imu')
@@ -117,5 +113,36 @@ task_context "ImuTask" do
 
     # IMU samples containing linear acceleration, orientation and angular velocity
     output_port('imu_samples', '/base/samples/IMUSensors')
+end
+
+task_context "GPSTask" do
+    subclasses 'SensorTask'
+
+    # The name of the frame attached to the GPS'
+    property('gps_frame', '/std/string', 'gps')
+
+    # The name of the reference frame for the UTM samples
+    property('utm_frame', '/std/string', 'utm')
+
+    # The name of the reference frame for the position samples
+    property('nwu_frame', '/std/string', 'nwu')
+
+    # The raw GPS position
+    output_port "gps_solution", "gps_base/Solution"
+
+    # Computed UTM position
+    output_port 'utm_samples', '/base/samples/RigidBodyState'
+
+    # Computed position in m, in the NWU coordinate frame
+    output_port 'position_samples', '/base/samples/RigidBodyState'
+
+    # UTM zone for conversion of WGS84 to UTM
+    property("utm_zone", "int", 32)
+
+    # UTM north for conversion of WGS84 to UTM
+    property("utm_north", "bool", true)
+
+    # Origin in UTM coordinates, that is used for position readings.
+    property("nwu_origin", "/base/Position")
 end
 

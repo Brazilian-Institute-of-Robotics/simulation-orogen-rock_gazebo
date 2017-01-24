@@ -10,4 +10,5 @@
   <depend package="base/orogen/types" />
   <depend package="simulation/gazebo" />
   <depend package="simulation/gazebo_thruster" />
+  <depend package="drivers/orogen/gps_base" />
 </package>
