@@ -2,7 +2,9 @@
 #define rock_gazebo_TYPES_HPP
 
 #include <iostream>
-#include "base/Time.hpp"
+#include <base/Time.hpp>
+#include <base/Eigen.hpp>
+#include <base/Float.hpp>
 
 namespace rock_gazebo
 {
@@ -19,6 +21,17 @@ namespace rock_gazebo
         std::string target_link;
         // The period of update the output port
         base::Time port_period;
+        // The position covariance
+        base::Matrix3d cov_position;
+        // The orientation covariance
+        base::Matrix3d cov_orientation;
+        // The velocity covariance
+        base::Matrix3d cov_velocity;
+
+        LinkExport()
+            : cov_position(base::Matrix3d::Ones() * base::unset<double>())
+            , cov_orientation(base::Matrix3d::Ones() * base::unset<double>())
+            , cov_velocity(base::Matrix3d::Ones() * base::unset<double>()) {}
     };
 }
 

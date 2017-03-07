@@ -43,6 +43,9 @@ namespace rock_gazebo {
 
                 ExportedLink()
                     : port(NULL) { }
+                ExportedLink(LinkExport const& src)
+                    : LinkExport(src)
+                    , port(NULL) { }
             };
             typedef std::map<std::string, ExportedLink> ExportedLinks;
             ExportedLinks exported_links;
