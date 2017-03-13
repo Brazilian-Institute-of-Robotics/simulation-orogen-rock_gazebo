@@ -73,7 +73,7 @@ void ModelTask::setupLinks()
     for(vector<LinkExport>::iterator it = export_conf.begin();
             it != export_conf.end(); ++it)
     {
-        ExportedLink exported_link;
+        ExportedLink exported_link(*it);
 
         exported_link.source_link =
             checkExportedLinkElements("source_link", it->source_link, _world_frame.get());
@@ -264,13 +264,13 @@ void ModelTask::updateLinks(base::Time const& time)
         rbs.targetFrame = it->second.target_frame;
         rbs.position = base::Vector3d(
             source2target.pos.x,source2target.pos.y,source2target.pos.z);
-        rbs.cov_position = _cov_position;
+        rbs.cov_position = it->second.cov_position;
         rbs.orientation = base::Quaterniond(
             source2target.rot.w,source2target.rot.x,source2target.rot.y,source2target.rot.z );
-        rbs.cov_orientation = _cov_orientation;
+        rbs.cov_orientation = it->second.cov_orientation;
         rbs.velocity = base::Vector3d(
             sourceInTarget_linear_vel.x,sourceInTarget_linear_vel.y,sourceInTarget_linear_vel.z);
-        rbs.cov_velocity = _cov_velocity;
+        rbs.cov_velocity = it->second.cov_velocity;
         rbs.angular_velocity = base::Vector3d(
             source_angular_vel.x,source_angular_vel.y,source_angular_vel.z);
         rbs.time = time;
