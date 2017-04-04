@@ -8,6 +8,7 @@
 #include <gps_base/UTMConverter.hpp>
 
 #include <gazebo/msgs/gps.pb.h>
+#include <gazebo/common/SphericalCoordinates.hh>
 
 namespace rock_gazebo{
 
@@ -36,6 +37,7 @@ namespace rock_gazebo{
         void setGazeboModel(ModelPtr model, sdf::ElementPtr sdfSensor);
 
         std::vector<gps_base::Solution> solutions;
+        gazebo::common::SphericalCoordinates gazebo_spherical;
 
     protected:
         void readInput(ConstGPSPtr &msg);
