@@ -127,6 +127,13 @@ task_context "GPSTask" do
     # The name of the reference frame for the position samples
     property('nwu_frame', '/std/string', 'nwu')
 
+    # Use a proper transverse mercator projection or Gazebo's
+    # internal SphericalCoordinate conversion class
+    #
+    # If you intend to compare true positions provided by ModelTask to things
+    # that use the GPS, this must be false
+    property('use_proper_utm_conversion', "bool", false)
+
     # The raw GPS position
     output_port "gps_solution", "gps_base/Solution"
 
@@ -136,13 +143,22 @@ task_context "GPSTask" do
     # Computed position in m, in the NWU coordinate frame
     output_port 'position_samples', '/base/samples/RigidBodyState'
 
-    # UTM zone for conversion of WGS84 to UTM
+    # UTM zone for conversion of WGS84 to UTM if use_proper_utm_conversion is
+    # true
     property("utm_zone", "int", 32)
 
-    # UTM north for conversion of WGS84 to UTM
+    # UTM north for conversion of WGS84 to UTM if use_proper_utm_conversion is
+    # true
     property("utm_north", "bool", true)
 
-    # Origin in UTM coordinates, that is used for position readings.
+    # Origin in UTM coordinates, that is used for position readings if
+    # use_proper_utm_conversion is true
     property("nwu_origin", "/base/Position")
+
+    # Latitude of the origin if use_proper_utm_conversion is false
+    property('latitude_origin', "/base/Angle")
+
+    # Longitude of the origin if use_proper_utm_conversion is false
+    property('longitude_origin', "/base/Angle")
 end
 
