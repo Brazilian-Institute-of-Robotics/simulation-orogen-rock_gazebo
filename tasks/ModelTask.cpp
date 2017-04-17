@@ -1,9 +1,9 @@
 /* Generated from orogen/lib/orogen/templates/tasks/Task.cpp */
 //======================================================================================
-// Brazilian Institute of Robotics 
+// Brazilian Institute of Robotics
 // Authors: Thomio Watanabe
 // Date: December 2014
-//====================================================================================== 
+//======================================================================================
 
 #include "ModelTask.hpp"
 #include <gazebo/common/Exception.hh>
@@ -13,14 +13,14 @@ using namespace gazebo;
 using namespace rock_gazebo;
 
 ModelTask::ModelTask(string const& name)
-	: ModelTaskBase(name)
+    : ModelTaskBase(name)
 {
     _cov_position.set(base::Matrix3d::Ones() * base::unset<double>());
     _cov_orientation.set(base::Matrix3d::Ones() * base::unset<double>());
     _cov_velocity.set(base::Matrix3d::Ones() * base::unset<double>());
 }
 ModelTask::ModelTask(string const& name, RTT::ExecutionEngine* engine)
-	: ModelTaskBase(name, engine)
+    : ModelTaskBase(name, engine)
 {
 }
 
@@ -42,7 +42,7 @@ void ModelTask::setGazeboModel(WorldPtr _world,  ModelPtr _model)
         _model_frame.set(_model->GetName());
     if (_world_frame.get().empty())
         _world_frame.set(_world->GetName());
-} 
+}
 
 void ModelTask::setupJoints()
 {
@@ -184,6 +184,7 @@ void ModelTask::updateJoints(base::Time const& time)
     // Read positions from Gazebo link
     vector<string> names;
     vector<double> positions;
+    vector<float> velocities;
     for(Joint_V::iterator it = gazebo_joints.begin(); it != gazebo_joints.end(); ++it )
     {
 #if GAZEBO_MAJOR_VERSION >= 6
@@ -195,16 +196,25 @@ void ModelTask::updateJoints(base::Time const& time)
         // Read joint angle from gazebo link
         names.push_back( (*it)->GetScopedName() );
         positions.push_back( (*it)->GetAngle(0).Radian() );
+        velocities.push_back( (float)(*it)->GetVelocity(0) );
     }
     base::samples::Joints joints = base::samples::Joints::Positions(positions,names);
+    for(std::vector<base::JointState>::iterator it = joints.elements.begin(); it != joints.elements.end(); ++it )
+    {
+        (*it).speed = velocities[it - joints.elements.begin()];
+    }
+    //joints = base::samples::Joints::Speeds(velocities,names);
     joints.time = time;
+    //joints.Speeds(velocities,names);
+    //base::samples::Joints joints2 = base::samples::Joints::Speeds(velocities,names);
+    //joints2.time = time;
     _joints_samples.write( joints );
 
     // If we have commands, pass them on to gazebo
     if (_joints_cmd.readNewest( joints_in ) == RTT::NewData)
     {
-	const std::vector<std::string> &names= joints_in.names;
-	std::vector<std::string>::const_iterator result;
+    const std::vector<std::string> &names= joints_in.names;
+    std::vector<std::string>::const_iterator result;
         for(Joint_V::iterator it = gazebo_joints.begin(); it != gazebo_joints.end(); ++it )
         {
 #if GAZEBO_MAJOR_VERSION >= 6
@@ -215,7 +225,7 @@ void ModelTask::updateJoints(base::Time const& time)
 
             // Do not set joints which are not part of the command
             result = std::find(names.begin(),names.end(),(*it)->GetScopedName());
-	    if(result == names.end())
+        if(result == names.end())
                 continue;
 
             // Apply effort to joint
@@ -235,7 +245,7 @@ void ModelTask::updateLinks(base::Time const& time)
     for(ExportedLinks::iterator it = exported_links.begin(); it != exported_links.end(); ++it)
     {
         //do not update the link if the last port writing happened
-        //in less then link_period. 
+        //in less then link_period.
         if (!(it->second.last_update.isNull()))
         {
             if ((time - it->second.last_update) <= it->second.port_period)
@@ -277,6 +287,18 @@ void ModelTask::updateLinks(base::Time const& time)
         it->second.port->write(rbs);
         it->second.last_update = time;
     }
+
+    // If we have commands, pass them on to gazebo
+    if (_model_wrench.readNewest( wrench_in ) == RTT::NewData)
+    {
+        // Apply effort to the model
+        if (gazebo_links.size() > 0)
+        {
+            LinkPtr link = gazebo_links.front();
+            link->SetForce(math::Vector3(wrench_in.force[0], wrench_in.force[1], wrench_in.force[2]));
+            link->SetTorque(math::Vector3(wrench_in.torque[0], wrench_in.torque[1], wrench_in.torque[2]));
+        }
+    }
 }
 
 bool ModelTask::configureHook()
@@ -288,6 +310,7 @@ bool ModelTask::configureHook()
     if( (!world) && (!model) )
         return false;
 
+    gazebo_links = model->GetLinks();
     gazebo_joints = model->GetJoints();
     setupLinks();
     setupJoints();

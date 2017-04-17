@@ -53,6 +53,8 @@ task_context "ModelTask" do
 
     # The model's pose if one wants to "warp"
     input_port 'model_pose', "/base/samples/RigidBodyState"
+    # Apply wrench to the model
+    input_port 'model_wrench', "/base/samples/Wrench"
 
     # Joints input/output ports
     input_port "joints_cmd", "/base/samples/Joints"

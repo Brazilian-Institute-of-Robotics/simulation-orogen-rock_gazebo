@@ -1,13 +1,13 @@
 /* Generated from orogen/lib/orogen/templates/tasks/Task.hpp */
 //======================================================================================
-// Brazilian Institute of Robotics 
+// Brazilian Institute of Robotics
 // Authors: Thomio Watanabe
 // Date: December 2014
-//====================================================================================== 
+//======================================================================================
 #ifndef ROCK_GAZEBO_MODELTASK_TASK_HPP
 #define ROCK_GAZEBO_MODELTASK_TASK_HPP
 
-#include "rock_gazebo/ModelTaskBase.hpp"	
+#include "rock_gazebo/ModelTaskBase.hpp"
 #include <gazebo/physics/physics.hh>
 
 namespace rock_gazebo {
@@ -19,7 +19,7 @@ namespace rock_gazebo {
             typedef gazebo::physics::ModelPtr ModelPtr;
             typedef gazebo::physics::JointPtr JointPtr;
             typedef gazebo::physics::LinkPtr LinkPtr;
-	        
+
         friend class ModelTaskBase;
         private:
             ModelPtr model;
@@ -52,6 +52,8 @@ namespace rock_gazebo {
 
             void setupLinks();
             void warpModel(base::samples::RigidBodyState const& modelPose);
+            Link_V gazebo_links;
+            base::samples::Wrench wrench_in;
             void updateLinks(base::Time const& time);
             void updateModelPose(base::Time const& time);
 
@@ -69,21 +71,21 @@ namespace rock_gazebo {
             bool configureHook();
             void cleanupHook();
 
-		    /** TaskContext constructor for ModelTask
-		     * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
-		     * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
-		     */
+            /** TaskContext constructor for ModelTask
+             * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
+             * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
+             */
             ModelTask(std::string const& name = "gazebo::ModelTask");
 
-		    /** TaskContext constructor for ModelTask 
-		     * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices. 
-		     * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task. 
-		     * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
-		     */
+            /** TaskContext constructor for ModelTask
+             * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices.
+             * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task.
+             * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
+             */
             ModelTask(std::string const& name, RTT::ExecutionEngine* engine);
 
-		    /** Default deconstructor of ModelTask
-		     */
+            /** Default deconstructor of ModelTask
+             */
             ~ModelTask();
     };
 }
