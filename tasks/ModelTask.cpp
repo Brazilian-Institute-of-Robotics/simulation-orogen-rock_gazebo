@@ -184,7 +184,7 @@ void ModelTask::updateJoints(base::Time const& time)
     // Read positions from Gazebo link
     vector<string> names;
     vector<double> positions;
-    vector<float> velocities;
+    vector<float> speeds;
     for(Joint_V::iterator it = gazebo_joints.begin(); it != gazebo_joints.end(); ++it )
     {
 #if GAZEBO_MAJOR_VERSION >= 6
@@ -193,21 +193,21 @@ void ModelTask::updateJoints(base::Time const& time)
             continue;
 #endif
 
-        // Read joint angle from gazebo link
+        // Read joint pos and speed from gazebo link
         names.push_back( (*it)->GetScopedName() );
         positions.push_back( (*it)->GetAngle(0).Radian() );
-        velocities.push_back( (float)(*it)->GetVelocity(0) );
+        speeds.push_back( (float)(*it)->GetVelocity(0) );
     }
+
+    // fill the Joints samples and write
     base::samples::Joints joints = base::samples::Joints::Positions(positions,names);
-    for(std::vector<base::JointState>::iterator it = joints.elements.begin(); it != joints.elements.end(); ++it )
+    vector<float>::iterator speeds_it = speeds.begin();
+    for(std::vector<base::JointState>::iterator elements_it = joints.elements.begin(); elements_it != joints.elements.end(); ++elements_it )
     {
-        (*it).speed = velocities[it - joints.elements.begin()];
+        (*elements_it).speed = *speeds_it;
+        ++speeds_it;
     }
-    //joints = base::samples::Joints::Speeds(velocities,names);
     joints.time = time;
-    //joints.Speeds(velocities,names);
-    //base::samples::Joints joints2 = base::samples::Joints::Speeds(velocities,names);
-    //joints2.time = time;
     _joints_samples.write( joints );
 
     // If we have commands, pass them on to gazebo
