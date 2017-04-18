@@ -289,14 +289,27 @@ void ModelTask::updateLinks(base::Time const& time)
     }
 
     // If we have commands, pass them on to gazebo
-    if (_model_wrench.readNewest( wrench_in ) == RTT::NewData)
+    if (_wrenches.readNewest( wrench_in ) == RTT::NewData)
     {
-        // Apply effort to the model
-        if (gazebo_links.size() > 0)
+        for (Link_V::iterator l_it = gazebo_links.begin(); l_it != gazebo_links.end(); ++l_it)
         {
-            LinkPtr link = gazebo_links.front();
-            link->SetForce(math::Vector3(wrench_in.force[0], wrench_in.force[1], wrench_in.force[2]));
-            link->SetTorque(math::Vector3(wrench_in.torque[0], wrench_in.torque[1], wrench_in.torque[2]));
+            LinkPtr link = *l_it;
+
+            std::vector<base::Wrench>::iterator w_in_it = wrench_in.elements.begin();
+            for (std::vector<std::string>::iterator w_name_in = wrench_in.names.begin(); w_name_in != wrench_in.names.end(); ++w_name_in)
+            {
+                if (link->GetName() == *w_name_in)
+                {
+                    // Apply effort to the model
+                    if (gazebo_links.size() > 0)
+                    {
+                        base::Wrench wrench = *w_in_it;
+                        link->SetForce(math::Vector3(wrench.force[0], wrench.force[1], wrench.force[2]));
+                        link->SetTorque(math::Vector3(wrench.torque[0], wrench.torque[1], wrench.torque[2]));
+                    }
+                }
+                ++w_in_it;
+            }
         }
     }
 }

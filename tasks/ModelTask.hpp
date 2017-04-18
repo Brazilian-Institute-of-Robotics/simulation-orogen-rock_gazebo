@@ -53,7 +53,7 @@ namespace rock_gazebo {
             void setupLinks();
             void warpModel(base::samples::RigidBodyState const& modelPose);
             Link_V gazebo_links;
-            base::samples::Wrench wrench_in;
+            base::samples::Wrenches wrench_in;
             void updateLinks(base::Time const& time);
             void updateModelPose(base::Time const& time);
 
