@@ -1,9 +1,9 @@
 /* Generated from orogen/lib/orogen/templates/tasks/Task.cpp */
 //======================================================================================
-// Brazilian Institute of Robotics 
+// Brazilian Institute of Robotics
 // Authors: Thomio Watanabe
 // Date: December 2014
-//====================================================================================== 
+//======================================================================================
 
 #include "ModelTask.hpp"
 #include <gazebo/common/Exception.hh>
@@ -13,14 +13,14 @@ using namespace gazebo;
 using namespace rock_gazebo;
 
 ModelTask::ModelTask(string const& name)
-	: ModelTaskBase(name)
+    : ModelTaskBase(name)
 {
     _cov_position.set(base::Matrix3d::Ones() * base::unset<double>());
     _cov_orientation.set(base::Matrix3d::Ones() * base::unset<double>());
     _cov_velocity.set(base::Matrix3d::Ones() * base::unset<double>());
 }
 ModelTask::ModelTask(string const& name, RTT::ExecutionEngine* engine)
-	: ModelTaskBase(name, engine)
+    : ModelTaskBase(name, engine)
 {
 }
 
@@ -42,7 +42,7 @@ void ModelTask::setGazeboModel(WorldPtr _world,  ModelPtr _model)
         _model_frame.set(_model->GetName());
     if (_world_frame.get().empty())
         _world_frame.set(_world->GetName());
-} 
+}
 
 void ModelTask::setupJoints()
 {
@@ -139,6 +139,7 @@ void ModelTask::updateHook()
         warpModel(modelPose);
 
     updateModelPose(time);
+    updateModelAccel(time);
     updateJoints(time);
     updateLinks(time);
 }
@@ -179,11 +180,23 @@ void ModelTask::updateModelPose(base::Time const& time)
     _pose_samples.write(rbs);
 }
 
+void ModelTask::updateModelAccel(base::Time const& time)
+{
+    math::Vector3 model2world_angular_accel = model->GetWorldAngularAccel();
+    base::samples::RigidBodyAcceleration rba;
+    rba.invalidateOrientation();
+    rba.time = time;
+    rba.cov_acceleration = _cov_acceleration.get();
+    rba.acceleration = base::Vector3d(model2world_angular_accel.x, model2world_angular_accel.y, model2world_angular_accel.z);
+    _ang_accel_samples.write(rba);
+}
+
 void ModelTask::updateJoints(base::Time const& time)
 {
     // Read positions from Gazebo link
     vector<string> names;
     vector<double> positions;
+    vector<float> speeds;
     for(Joint_V::iterator it = gazebo_joints.begin(); it != gazebo_joints.end(); ++it )
     {
 #if GAZEBO_MAJOR_VERSION >= 6
@@ -192,19 +205,28 @@ void ModelTask::updateJoints(base::Time const& time)
             continue;
 #endif
 
-        // Read joint angle from gazebo link
+        // Read joint pos and speed from gazebo link
         names.push_back( (*it)->GetScopedName() );
         positions.push_back( (*it)->GetAngle(0).Radian() );
+        speeds.push_back( (float)(*it)->GetVelocity(0) );
     }
+
+    // fill the Joints samples and write
     base::samples::Joints joints = base::samples::Joints::Positions(positions,names);
+    vector<float>::iterator speeds_it = speeds.begin();
+    for(std::vector<base::JointState>::iterator elements_it = joints.elements.begin(); elements_it != joints.elements.end(); ++elements_it )
+    {
+        (*elements_it).speed = *speeds_it;
+        ++speeds_it;
+    }
     joints.time = time;
     _joints_samples.write( joints );
 
     // If we have commands, pass them on to gazebo
     if (_joints_cmd.readNewest( joints_in ) == RTT::NewData)
     {
-	const std::vector<std::string> &names= joints_in.names;
-	std::vector<std::string>::const_iterator result;
+    const std::vector<std::string> &names= joints_in.names;
+    std::vector<std::string>::const_iterator result;
         for(Joint_V::iterator it = gazebo_joints.begin(); it != gazebo_joints.end(); ++it )
         {
 #if GAZEBO_MAJOR_VERSION >= 6
@@ -215,7 +237,7 @@ void ModelTask::updateJoints(base::Time const& time)
 
             // Do not set joints which are not part of the command
             result = std::find(names.begin(),names.end(),(*it)->GetScopedName());
-	    if(result == names.end())
+        if(result == names.end())
                 continue;
 
             // Apply effort to joint
@@ -235,7 +257,7 @@ void ModelTask::updateLinks(base::Time const& time)
     for(ExportedLinks::iterator it = exported_links.begin(); it != exported_links.end(); ++it)
     {
         //do not update the link if the last port writing happened
-        //in less then link_period. 
+        //in less then link_period.
         if (!(it->second.last_update.isNull()))
         {
             if ((time - it->second.last_update) <= it->second.port_period)
@@ -277,6 +299,31 @@ void ModelTask::updateLinks(base::Time const& time)
         it->second.port->write(rbs);
         it->second.last_update = time;
     }
+
+    // If we have commands, pass them on to gazebo
+    if (_wrenches.readNewest( wrench_in ) == RTT::NewData)
+    {
+        for (Link_V::iterator l_it = gazebo_links.begin(); l_it != gazebo_links.end(); ++l_it)
+        {
+            LinkPtr link = *l_it;
+
+            std::vector<base::Wrench>::iterator w_in_it = wrench_in.elements.begin();
+            for (std::vector<std::string>::iterator w_name_in = wrench_in.names.begin(); w_name_in != wrench_in.names.end(); ++w_name_in)
+            {
+                if (link->GetName() == *w_name_in)
+                {
+                    // Apply effort to the model
+                    if (gazebo_links.size() > 0)
+                    {
+                        base::Wrench wrench = *w_in_it;
+                        link->SetForce(math::Vector3(wrench.force[0], wrench.force[1], wrench.force[2]));
+                        link->SetTorque(math::Vector3(wrench.torque[0], wrench.torque[1], wrench.torque[2]));
+                    }
+                }
+                ++w_in_it;
+            }
+        }
+    }
 }
 
 bool ModelTask::configureHook()
@@ -288,6 +335,7 @@ bool ModelTask::configureHook()
     if( (!world) && (!model) )
         return false;
 
+    gazebo_links = model->GetLinks();
     gazebo_joints = model->GetJoints();
     setupLinks();
     setupJoints();
