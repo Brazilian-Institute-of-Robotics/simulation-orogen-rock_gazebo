@@ -56,6 +56,7 @@ namespace rock_gazebo {
             base::samples::Wrenches wrench_in;
             void updateLinks(base::Time const& time);
             void updateModelPose(base::Time const& time);
+            void updateModelAccel(base::Time const& time);
 
             std::string checkExportedLinkElements(std::string, std::string, std::string);
 

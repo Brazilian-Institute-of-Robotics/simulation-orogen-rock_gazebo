@@ -139,6 +139,7 @@ void ModelTask::updateHook()
         warpModel(modelPose);
 
     updateModelPose(time);
+    updateModelAccel(time);
     updateJoints(time);
     updateLinks(time);
 }
@@ -177,6 +178,17 @@ void ModelTask::updateModelPose(base::Time const& time)
     rbs.angular_velocity = base::Vector3d(
         model2world_angular_vel.x, model2world_angular_vel.y, model2world_angular_vel.z);
     _pose_samples.write(rbs);
+}
+
+void ModelTask::updateModelAccel(base::Time const& time)
+{
+    math::Vector3 model2world_angular_accel = model->GetWorldAngularAccel();
+    base::samples::RigidBodyAcceleration rba;
+    rba.invalidateOrientation();
+    rba.time = time;
+    rba.cov_acceleration = _cov_acceleration.get();
+    rba.acceleration = base::Vector3d(model2world_angular_accel.x, model2world_angular_accel.y, model2world_angular_accel.z);
+    _ang_accel_samples.write(rba);
 }
 
 void ModelTask::updateJoints(base::Time const& time)

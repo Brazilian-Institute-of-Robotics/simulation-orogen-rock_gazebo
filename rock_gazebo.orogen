@@ -49,6 +49,11 @@ task_context "ModelTask" do
     # The covariance matrix to be used as velocity covariance. Default is unset (NaN)
     property 'cov_velocity', '/base/Matrix3d'
 
+    # The acceleration of the model w.r.t. the world frame
+    output_port 'ang_accel_samples', '/base/samples/RigidBodyAcceleration'
+    # The covariance matrix to be used as acceleration covariance. Default is unset (NaN)
+    property 'cov_acceleration', '/base/Matrix3d'
+
     property "exported_links", "std/vector<rock_gazebo/LinkExport>"
 
     # The model's pose if one wants to "warp"
