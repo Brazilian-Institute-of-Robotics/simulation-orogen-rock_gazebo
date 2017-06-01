@@ -58,6 +58,9 @@ void ThrusterTask::updateHook()
             thruster->set_name( *jointName );
             if( jointState.isEffort() )
                 thruster->set_effort( jointState.effort );
+
+            if( jointState.isSpeed() )
+                thruster->set_speed( jointState.speed );
         }
 
         // Write in gazebo topic
