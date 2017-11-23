@@ -32,9 +32,8 @@ base::Time BaseTask::getSimTime() const
 
 base::Time BaseTask::getCurrentTime(gazebo::msgs::Time sim_timestamp) const
 {
-    return getCurrentTime(base::Time::fromMicroseconds(
-                sim_timestamp.sec() * 1000000 + sim_timestamp.nsec() / 1000)
-            );
+    return getCurrentTime(base::Time::fromSeconds(sim_timestamp.sec())+
+            base::Time::fromMicroseconds(sim_timestamp.nsec() / 1000));
 }
 
 base::Time BaseTask::getCurrentTime(base::Time sim_timestamp) const
